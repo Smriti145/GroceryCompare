@@ -1,102 +1,109 @@
 # GroceryCompare
 
-React Native grocery basket comparison for Blinkit, Zepto, and Swiggy, backed by Express and PostgreSQL. This repository is a development foundation with sample offers; it does not fetch live retailer prices or transfer baskets to retailer checkout.
+GroceryCompare is a React Native app with an Express and PostgreSQL API for comparing grocery baskets across Blinkit, Zepto, and Swiggy. The repository includes sample offers for development; it does not fetch live retailer prices or transfer baskets to checkout.
 
-## Quick start with installed PostgreSQL
+## Repository layout
 
-PostgreSQL is now configured as a project-owned local database. With PostgreSQL binaries on your PATH:
-
-```sh
-npm run db:setup       # First run: create, migrate and seed the database
-npm run backend:dev   # Terminal 1: API on port 5001
-npm start             # Terminal 2: Metro
-npm run android       # Terminal 3: Android emulator/device
+```text
+apps/
+  mobile/                 React Native application (Android and iOS)
+  api/                    Express API, Prisma schema, migrations, and tests
+packages/
+  contracts/              Types shared by the mobile app and API
+.github/workflows/        Continuous integration
+compose.yaml              Optional PostgreSQL container
+package.json              Workspace commands
 ```
 
-On subsequent runs use `npm run db:start`. Use `npm run db:stop` to stop it without deleting data, and `npm run db:status` to inspect it. The database listens only on 127.0.0.1:55440, uses local trust authentication for development, and stores data in ignored `backend/.local/`. This is not a production database configuration.
+Generated dependencies and build output are ignored. Install JavaScript dependencies once at the repository root; npm workspaces manage both applications through a single lockfile.
 
-Generated `backend/.env.local` selects this database for backend development while preserving your existing `.env`. Explicit environment variables take precedence; production ignores `.env.local`. `db:setup` passes the correct database URL to Prisma migrations. When running Prisma CLI directly, explicitly set `DATABASE_URL` for the intended database because Prisma does not load `.env.local` automatically. Rerunning setup refreshes the sample catalog without deleting products.
+## Quick start with local PostgreSQL
 
-The mobile app now includes category filtering, product price cards, visible basket quantities, confirmation before clearing the basket, and highlighted best-value comparisons. Categories are filtered by the API across the full catalog, not just the loaded page.
-
-## Local setup
-
-Use Node 22.11+ and the React Native native build prerequisites. Backend and mobile have separate lockfiles.
+Use Node 22.11+ and install the React Native native build prerequisites. With PostgreSQL binaries on your `PATH`:
 
 ```sh
 npm ci
-npm ci --prefix backend
-cp backend/.env.example backend/.env
-# Requires Docker Compose; alternatively provision a local PostgreSQL database.
-docker compose up -d --wait
-npm --prefix backend run prisma:generate
-npm --prefix backend run db:migrate
-npm --prefix backend run db:seed
-npm --prefix backend run dev
+npm run db:setup       # Create, migrate, and seed the project database
+npm run api:dev        # Terminal 1: API on port 5001
+npm start              # Terminal 2: Metro
+npm run android        # Terminal 3: Android emulator or device
 ```
 
-In separate terminals run `npm start` and `npm run android` or `npm run ios`. For iOS, run `bundle install` and then `bundle exec pod install` from `ios` after adding native dependencies. AsyncStorage is a native dependency and requires a native rebuild.
+On later runs use `npm run db:start`. Use `npm run db:stop` to stop PostgreSQL without deleting data and `npm run db:status` to inspect it. The database listens on `127.0.0.1:55440` and stores its ignored local data in `apps/api/.local/`.
 
-Development defaults use the Android emulator host or iOS simulator localhost. For a physical device, generate public configuration before building:
+The generated `apps/api/.env.local` selects this database for API development while preserving an existing `.env`. Explicit environment variables take precedence. Rerunning `npm run db:setup` refreshes sample offers without deleting the catalog.
+
+## Setup with Docker
+
+```sh
+npm ci
+cp apps/api/.env.example apps/api/.env
+docker compose up -d --wait
+npm run prisma:generate --workspace @grocerycompare/api
+npm run db:migrate --workspace @grocerycompare/api
+npm run db:seed --workspace @grocerycompare/api
+npm run api:dev
+```
+
+For iOS, run `bundle install` from `apps/mobile`, then `bundle exec pod install` from `apps/mobile/ios` after adding native dependencies. AsyncStorage requires a native rebuild.
+
+Development uses the Android emulator host or iOS simulator localhost. For a physical device, generate public mobile configuration before building:
 
 ```sh
 API_BASE_URL=http://YOUR_LAN_IP:5001/api DEFAULT_LOCATION=DEMO npm run configure
 ```
 
-Only public settings belong in mobile configuration. Never put credentials in the app bundle. Release requests require HTTPS. Example release configuration:
+Only public settings belong in the mobile bundle. Release requests require HTTPS:
 
 ```sh
 NODE_ENV=production API_BASE_URL=https://api.example.com/api DEFAULT_LOCATION=560001 npm run configure
 ```
 
-Area codes identify offer datasets; they do not currently perform address geocoding or retailer serviceability checks. The DEMO catalog expires after `OFFER_MAX_AGE_SECONDS`; rerun the demo seed to refresh it. Demo seeding is disabled with `NODE_ENV=production`. Seeding upserts deterministic sample products and DEMO offers in a transaction without deleting the catalog.
+Area codes identify offer datasets; they do not perform address geocoding or retailer serviceability checks. The DEMO catalog expires after `OFFER_MAX_AGE_SECONDS`; use `npm run db:refresh` to refresh its timestamps. Production mode disables demo seeding.
 
-## Verification
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm start` | Start React Native Metro |
+| `npm run android` | Build and launch Android |
+| `npm run ios` | Build and launch iOS |
+| `npm run api:dev` | Start the API with reloads |
+| `npm run db:setup` | Start, migrate, and seed local PostgreSQL |
+| `npm run db:refresh` | Refresh deterministic demo offers |
+| `npm run check` | Run lint, type checks, tests, and the API build |
+| `npm run test:integration` | Exercise the HTTP API against a test database |
+
+Integration checks require a migrated, seeded test database. Never point them at production:
 
 ```sh
-npm run check
-# Integration checks require a migrated, seeded test database; never point tests at production.
-DATABASE_URL=postgresql://USER:PASSWORD@HOST/TEST_DB npm --prefix backend run test:integration
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/TEST_DB npm run test:integration
 ```
-
-`check` runs mobile type checking, lint, the mobile render test, backend type checking, comparison regression tests, and the backend build. CI additionally provisions PostgreSQL, runs migrations and the seed, then exercises the HTTP API. Native simulator/device builds remain a separate release check.
 
 ## Architecture and API
 
-- `shared/contracts.ts`: shared request/response types, money represented in integer paise.
-- `src`: mobile screens, persisted cart/preferences, paginated server search, cancellable API requests and retry states.
-- `backend/src/domain`: deterministic comparison and request validation.
-- `backend/src/repositories`: bounded database queries for requested products and paginated catalog retrieval.
-- `backend/prisma`: relational schema, migrations and sample data.
+- `apps/mobile/src` contains screens, persisted cart preferences, paginated search, cancellable requests, and retry states.
+- `apps/api/src/domain` contains deterministic comparison and request validation.
+- `apps/api/src/repositories` contains bounded database queries and paginated catalog retrieval.
+- `apps/api/prisma` contains the relational schema, migrations, and deterministic sample data.
+- `packages/contracts/index.ts` defines shared request and response types; money uses integer paise.
 
-Endpoints:
-
-| Endpoint | Input / behavior |
+| Endpoint | Input or behavior |
 | --- | --- |
 | `GET /health/live` | Process liveness |
-| `GET /health/ready` | Database readiness; 503 when unavailable |
-| `GET /api/products` | `location` required; optional `search`, `category`, UUID `cursor`, `limit` (1–100) |
-| `GET /api/products/:id` | UUID product ID and required `location` |
-| `POST /api/compare` | `{ "location": "DEMO", "items": [{ "productId": "UUID", "quantity": 2 }] }` |
+| `GET /health/ready` | Database readiness; returns 503 when unavailable |
+| `GET /api/products` | Requires `location`; accepts `search`, `category`, UUID `cursor`, and `limit` from 1 to 100 |
+| `GET /api/products/:id` | Requires a UUID product ID and `location` |
+| `POST /api/compare` | Accepts `{ "location": "DEMO", "items": [{ "productId": "UUID", "quantity": 2 }] }` |
 
-Comparisons accept 1–100 distinct product IDs and quantities of 1–99. A platform is eligible only if every line has an available, fresh offer at the requested location with an equivalent pack size. Matching does not infer product identity. Totals exclude checkout fees and discounts. Delivery estimates use the slowest item estimate, not a sum or a retailer delivery guarantee. Equal totals prefer faster delivery, then a deterministic platform ordering. No eligible platform returns a null recommendation.
+Comparisons accept 1–100 distinct products and quantities from 1–99. A retailer is eligible only when every line has an available, fresh offer for the requested location with an equivalent pack size. Totals exclude checkout fees and discounts. Equal totals prefer faster delivery and then stable platform order.
 
-Responses include request IDs. Errors return a stable code and safe message without internal exception details. The backend applies bounded request bodies, per-process rate limits, security headers, an explicit browser-origin allowlist and graceful shutdown.
+Responses include request IDs. Errors use stable codes and safe messages. The API applies bounded request bodies, per-process rate limits, security headers, an explicit browser-origin allowlist, and graceful shutdown. Temporary database failures return `503 DATABASE_UNAVAILABLE` with a retry hint.
 
-## Database rollout
+## Production rollout
 
-For a fresh database, use `db:migrate`. For an existing database created using the original schema, take a backup and compare it with `202609090001_baseline` before baselining with Prisma migrate resolve; do not apply the CREATE TABLE baseline over existing tables. Review the hardening migration on a restored staging copy first. It intentionally fails on duplicate retailer SKU/location records or invalid prices rather than deleting data. Ambiguous legacy pack sizes remain ineligible until curated.
+For a fresh database, use the API `db:migrate` script. For a database created from the original schema, back it up and compare it with migration `202609090001_baseline` before using Prisma migrate resolve. Review the hardening migration on a restored staging copy; it fails on duplicate retailer records or invalid prices instead of deleting data.
 
-Production: generate the Prisma client, run the build, apply reviewed migrations as a separate release step, then `npm --prefix backend start`. Compiled entry point is `backend/dist/backend/src/server.js`; compiled shared contracts are in the same dist tree. Do not run development seed jobs in production.
+Generate the Prisma client, run the build, and apply reviewed migrations as a separate release step. Start the compiled API with `npm run start --workspace @grocerycompare/api`; its entry point is `apps/api/dist/apps/api/src/server.js`.
 
-## Production work still required
-
-This code has not been certified for enterprise operation. Before a real launch:
-
-- Integrate authorized retailer feeds with location, pack identity, stock, freshness, retries and ingestion monitoring. No ingestion worker or retailer credentials are included.
-- Provision managed PostgreSQL with connection limits, backups and tested restores; establish staging migration and rollback procedures.
-- Terminate HTTPS at a trusted gateway, configure CORS and exact trusted proxy hops, manage backend secrets, and disable demo data.
-- Replace per-process rate limiting with a gateway/shared store before scaling to multiple replicas. Set capacity targets and run load tests before choosing cache or replica sizes.
-- Collect structured logs and metrics centrally, alert on latency, readiness failures and stale offers, and agree on service objectives.
-- Add authentication and authorization when introducing accounts, administrative tools or private data. Current catalog and comparison endpoints are intentionally public, and there are no administrative write endpoints.
-- Verify Android/iOS builds, accessibility and user journeys on supported devices. Add signing, release distribution and native end-to-end tests to the release pipeline.
+Before a real launch, connect authorized retailer feeds, provision managed PostgreSQL with tested backups, centralize logs and metrics, move rate limiting to shared infrastructure, add authentication for private or administrative features, run capacity tests, and validate signed Android and iOS releases on supported devices.
