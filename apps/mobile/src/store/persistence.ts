@@ -57,7 +57,7 @@ export function restoreCart(value: unknown): CartItem[] {
 export function restoreLocation(value: unknown, fallback: string): string {
   return record(value) &&
     typeof value.location === 'string' &&
-    /^[A-Za-z0-9_-]{1,64}$/.test(value.location)
+    /^[1-9][0-9]{5}$/.test(value.location)
     ? value.location
     : fallback;
 }

@@ -10,9 +10,11 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     set => ({
-      location: config.defaultLocation,
+      location: /^[1-9][0-9]{5}$/.test(config.defaultLocation)
+        ? config.defaultLocation
+        : '',
       setLocation: location => {
-        if (/^[A-Za-z0-9_-]{1,64}$/.test(location)) set({ location });
+        if (/^[1-9][0-9]{5}$/.test(location)) set({ location });
       },
     }),
     {

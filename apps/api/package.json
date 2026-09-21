@@ -4,6 +4,8 @@
   "description": "GroceryCompare catalog and basket comparison API",
   "main": "dist/apps/api/src/server.js",
   "scripts": {
+    "catalog": "ts-node scripts/catalog.ts",
+    "feed:import": "ts-node scripts/import-feed.ts",
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/apps/api/src/server.js",

@@ -7,7 +7,7 @@ export async function fetchProducts(
   signal?: AbortSignal,
   category?: string,
 ): Promise<ProductPage> {
-  const response = await api.get<ApiSuccess<ProductPage>>('/products', {
+  const response = await api.get<ApiSuccess<ProductPage>>('/checkout/products', {
     params: {
       location,
       search,

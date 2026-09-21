@@ -7,6 +7,7 @@ import { env } from './config/env';
 import prisma from './config/prisma';
 import productRoutes from './routes/products.routes';
 import comparisonRoutes from './routes/comparison.routes';
+import { checkoutRoutes } from './routes/checkout.routes';
 import { ApiError, errorHandler } from './middleware/errors';
 const requestIdPattern = /^[A-Za-z0-9_-]{8,64}$/;
 export function createApp() {
@@ -80,8 +81,9 @@ export function createApp() {
     }),
   );
   app.use(express.json({ limit: '32kb' }));
-  app.use('/api/products', productRoutes);
-  app.use('/api/compare', comparisonRoutes);
+  if (env.NODE_ENV !== 'production') app.use('/api/products', productRoutes);
+  app.use('/api/checkout', checkoutRoutes);
+  if (env.NODE_ENV !== 'production') app.use('/api/compare', comparisonRoutes);
   app.use((_req, _res, next) =>
     next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')),
   );

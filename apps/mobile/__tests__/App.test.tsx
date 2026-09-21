@@ -2,10 +2,12 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import App from '../App';
 import { useCartStore } from '../src/store/cartStore';
+import { useAppStore } from '../src/store/appStore';
 import { fetchProducts } from '../src/api/productApi';
 jest.mock('../src/api/productApi', () => ({ fetchProducts: jest.fn() }));
 test('browses categories and adds a product to the basket', async () => {
   jest.useFakeTimers();
+  useAppStore.setState({ location: '560001' });
   jest
     .mocked(fetchProducts)
     .mockResolvedValue({
@@ -30,7 +32,7 @@ test('browses categories and adds a product to the basket', async () => {
       jest.advanceTimersByTime(500);
     });
     expect(
-      renderer.root.findByProps({ accessibilityLabel: 'Delivery area code' }),
+      renderer.root.findByProps({ accessibilityLabel: 'Delivery pincode' }),
     ).toBeTruthy();
     expect(fetchProducts).toHaveBeenCalled();
     await act(async () => {
@@ -45,7 +47,7 @@ test('browses categories and adds a product to the basket', async () => {
         .props.onPress();
     });
     expect(fetchProducts).toHaveBeenLastCalledWith(
-      'DEMO',
+      '560001',
       '',
       null,
       expect.anything(),

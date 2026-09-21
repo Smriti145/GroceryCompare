@@ -12,6 +12,9 @@ model Product {
   category String
   quantity String @default("")
   variants Variant[]
+  retailerOffers RetailerOffer[]
+  mappings CanonicalMapping[]
+  variantName String @default("")
   @@index([category, id])
 }
 model Variant {
@@ -35,4 +38,64 @@ model CartItem {
   id String @id @default(uuid())
   productName String
   quantity String
+}
+
+// Authorized source observations, isolated from legacy/demo comparisons.
+model RetailerOffer {
+  id String @id @default(uuid())
+  retailer String
+  sku String
+  location String
+  storeId String
+  sellerId String
+  productId String
+  packSize String
+  product Product @relation(fields: [productId], references: [id])
+  pricePaise Int
+  mrpPaise Int?
+  inStock Boolean
+  stockQuantity Int?
+  etaMinutes Int?
+  feesPaise Int?
+  minimumOrderPaise Int?
+  observedAt DateTime
+  receivedAt DateTime @default(now())
+  @@unique([retailer, sku, location, storeId, sellerId])
+  @@index([productId, location, observedAt])
+}
+
+model ServiceArea {
+  id String @id @default(uuid())
+  retailer String
+  storeId String
+  sellerId String
+  warehouseId String?
+  pincode String
+  // Pincode coverage must be explicitly guaranteed by the provider.
+  entirePincode Boolean @default(false)
+  latitude Float?
+  longitude Float?
+  radiusMeters Int?
+  serving Boolean
+  etaMinutes Int
+  observedAt DateTime
+  expiresAt DateTime
+  source String
+  tariff Json?
+  @@unique([retailer, storeId, sellerId, pincode])
+  @@index([pincode, serving, expiresAt])
+}
+
+model CanonicalMapping {
+  id String @id @default(uuid())
+  retailer String
+  sku String
+  productId String
+  product Product @relation(fields: [productId], references: [id])
+  // Fingerprint invalidates a correction when the retailer changes the SKU's identity.
+  fingerprint String
+  reason String
+  reviewedBy String
+  updatedAt DateTime @updatedAt
+  @@unique([retailer, sku])
 }

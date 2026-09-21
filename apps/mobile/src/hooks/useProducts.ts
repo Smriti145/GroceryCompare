@@ -12,5 +12,6 @@ export function useProducts(
       fetchProducts(location, search, pageParam, signal, category),
     getNextPageParam: page => page.nextCursor,
     staleTime: 30_000,
+    enabled: /^[1-9][0-9]{5}$/.test(location),
   });
 }
