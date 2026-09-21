@@ -1,1 +1,4 @@
-{ "apiBaseUrl": "", "defaultLocation": "DEMO" }
+{
+  "apiBaseUrl": "",
+  "defaultLocation": ""
+}

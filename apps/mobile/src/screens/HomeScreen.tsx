@@ -24,6 +24,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import Loader from '../components/common/Loader';
 import { errorMessage } from '../api/axios';
 import { Colors } from '../theme/colors';
+import api from '../api/axios';
 const categories = ['All', 'Dairy', 'Staples', 'Snacks'];
 export default function HomeScreen({
   navigation,
@@ -32,6 +33,28 @@ export default function HomeScreen({
   const location = useAppStore(s => s.location);
   const setLocation = useAppStore(s => s.setLocation);
   const [area, setArea] = useState(location);
+  const [coverageMessage, setCoverageMessage] = useState(
+    'Enter your pincode to check verified delivery coverage.',
+  );
+  const [checking, setChecking] = useState(false);
+  async function checkLocation() {
+    setChecking(true);
+    try {
+      const response = await api.post('/checkout/location', {
+        pincode: area.trim(),
+      });
+      setLocation(response.data.data.location.pincode);
+      setCoverageMessage(
+        response.data.data.stores.length
+          ? `${response.data.data.stores.length} verified delivery stores. ETA and fees are checked when you compare.`
+          : 'No verified retailer coverage is available here yet.',
+      );
+    } catch (error) {
+      setCoverageMessage(errorMessage(error));
+    } finally {
+      setChecking(false);
+    }
+  }
   useEffect(() => setArea(location), [location]);
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
@@ -54,37 +77,35 @@ export default function HomeScreen({
       <Text style={styles.eyebrow}>A LITTLE COMPARISON. MORE SAVINGS.</Text>
       <Text style={styles.heading}>Your groceries.{'\n'}A better price.</Text>
       <Text style={styles.description}>
-        One basket. Three stores. Find the best value for your everyday
-        essentials.
+        Compare your full basket or split it across stores, including known
+        delivery costs.
       </Text>
       <View style={styles.location}>
-        <Text style={styles.locationLabel}>
-          DELIVERY AREA {location === 'DEMO' ? '· SAMPLE CATALOG' : ''}
-        </Text>
+        <Text style={styles.locationLabel}>DELIVERY PINCODE</Text>
         <View style={styles.area}>
           <TextInput
             style={styles.input}
-            accessibilityLabel="Delivery area code"
-            placeholder="Area code"
+            accessibilityLabel="Delivery pincode"
+            placeholder="Six-digit pincode"
+            keyboardType="number-pad"
+            editable={!checking}
             placeholderTextColor={Colors.textSecondary}
             value={area}
             onChangeText={setArea}
-            maxLength={64}
+            maxLength={6}
             autoCapitalize="none"
             autoCorrect={false}
           />
           <PrimaryButton
-            title="Apply"
+            title={checking ? 'Checking...' : 'Check coverage'}
             variant="secondary"
-            disabled={!/^[A-Za-z0-9_-]{1,64}$/.test(area.trim())}
-            onPress={() => setLocation(area.trim())}
+            disabled={checking || !/^[1-9][0-9]{5}$/.test(area.trim())}
+            onPress={() => {
+              void checkLocation();
+            }}
           />
         </View>
-        <Text style={styles.hint}>
-          {location === 'DEMO'
-            ? 'Explore with sample prices. Live retailer feeds are not connected.'
-            : `Showing offers for ${location}`}
-        </Text>
+        <Text style={styles.hint}>{coverageMessage}</Text>
       </View>
       <SearchBar value={search} onChange={setSearch} />
       <ScrollView
@@ -161,7 +182,9 @@ export default function HomeScreen({
             />
           )}
           ListEmptyComponent={
-            products.isPending ? (
+            !location ? (
+              <EmptyState message="Enter your delivery pincode to find available groceries." />
+            ) : products.isPending ? (
               <Loader />
             ) : products.isError ? (
               <EmptyState

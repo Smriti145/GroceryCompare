@@ -58,10 +58,10 @@ export default function ProductCard({
           <Text style={styles.detail}>
             {item.variants.some(o => o.isDemo)
               ? 'Sample prices from'
-              : 'Listed price from'}
+              : 'Store availability checked at comparison'}
           </Text>
           <Text style={styles.price}>
-            {minimum === null ? 'Unavailable' : formatMoney(minimum)}
+            {minimum === null ? 'Compare checkout costs' : formatMoney(minimum)}
           </Text>
         </View>
         <PrimaryButton
