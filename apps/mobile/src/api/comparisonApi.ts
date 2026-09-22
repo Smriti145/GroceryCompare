@@ -1,3 +1,4 @@
+import type { Preferences } from '../../../../packages/contracts/preferences';
 import api from './axios';
 import type {
   ApiSuccess,
@@ -5,12 +6,21 @@ import type {
 } from '../../../../packages/contracts';
 import type { CheckoutComparison } from '../../../../packages/contracts/checkout';
 export async function compareCart(
-  request: ComparisonRequest & { maxDeliveries?: number; couponCode?: string },
+  request: ComparisonRequest & {
+    maxDeliveries?: number;
+    couponCode?: string;
+    preferences?: Preferences;
+  },
   signal?: AbortSignal,
 ): Promise<CheckoutComparison> {
-  const response = await api.post<ApiSuccess<CheckoutComparison>>(
+  const response = await api.post<
+    ApiSuccess<CheckoutComparison> & {
+      providers?: CheckoutComparison['providerStatuses'];
+    }
+  >(
     '/checkout/compare',
     {
+      preferences: request.preferences,
       items: request.items,
       location: { pincode: request.location },
       maxDeliveries: request.maxDeliveries ?? 2,
@@ -20,5 +30,5 @@ export async function compareCart(
       signal,
     },
   );
-  return response.data.data;
+  return { ...response.data.data, providerStatuses: response.data.providers };
 }

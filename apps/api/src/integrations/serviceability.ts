@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
 import prisma from '../config/prisma';
+import { Prisma } from '@prisma/client';
 import { RETAILERS } from '../../../../packages/contracts/checkout';
 import { tariffSchema } from '../domain/checkout';
 import { pincodeSchema } from '../services/location.service';

@@ -40,3 +40,5 @@ Live connectivity still requires provider-specific authenticated fetching with b
 rate limits, ingestion monitoring, and credentials supplied through a secret manager.
 Request data redistribution rights, location/store semantics, quotas, freshness
 guarantees, and sample payloads from each provider before implementing its adapter.
+
+Accepted observations now also create deduplicated price snapshots in the same transaction. See [Accounts and insights](ACCOUNTS_AND_INSIGHTS.md) for polling resilience, history and worker setup.

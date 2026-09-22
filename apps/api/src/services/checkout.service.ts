@@ -1,8 +1,12 @@
-import { Prisma } from '@prisma/client';
 import prisma from '../config/prisma';
+import { Prisma } from '@prisma/client';
 import { env } from '../config/env';
 import { normalizePack } from '../domain/comparison';
 import { optimizeBasket, StoreInput, tariffSchema } from '../domain/checkout';
+import {
+  Preferences,
+  defaultPreferences,
+} from '../../../../packages/contracts/preferences';
 import { servingStores } from './location.service';
 import {
   BasketLine,
@@ -15,6 +19,7 @@ export async function checkout(
   items: BasketLine[],
   maxDeliveries: number,
   couponCode?: string,
+  preferences: Preferences = defaultPreferences,
 ) {
   const now = new Date();
   const stores = await servingStores(location, now);
@@ -57,6 +62,9 @@ export async function checkout(
       offers: offers
         .filter(
           o =>
+            preferences.dietaryTags.every(tag =>
+              o.product.dietaryTags.includes(tag),
+            ) &&
             o.retailer === row.retailer &&
             o.storeId === row.storeId &&
             o.sellerId === row.sellerId &&
@@ -82,5 +90,6 @@ export async function checkout(
     maxDeliveries,
     [],
     couponCode,
+    preferences,
   );
 }

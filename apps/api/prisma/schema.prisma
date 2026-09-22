@@ -15,6 +15,8 @@ model Product {
   retailerOffers RetailerOffer[]
   mappings CanonicalMapping[]
   variantName String @default("")
+  // Tags must come from trusted catalog curation; absence means unknown.
+  dietaryTags String[] @default([])
   @@index([category, id])
 }
 model Variant {
@@ -98,4 +100,99 @@ model CanonicalMapping {
   reviewedBy String
   updatedAt DateTime @updatedAt
   @@unique([retailer, sku])
+}
+
+// Immutable source observations. Uniqueness deduplicates retried feed deliveries.
+model PriceSnapshot {
+  id String @id @default(uuid())
+  retailer String
+  sku String
+  location String
+  storeId String
+  sellerId String
+  productId String
+  packSize String
+  pricePaise Int
+  inStock Boolean
+  observedAt DateTime
+  receivedAt DateTime @default(now())
+  @@unique([retailer, sku, location, storeId, sellerId, observedAt])
+  @@index([productId, location, observedAt])
+}
+model Account {
+  id String @id @default(uuid())
+  email String @unique
+  role String @default("USER")
+  preferences Json @default("{}")
+  createdAt DateTime @default(now())
+  sessions DeviceSession[]
+  identities SocialIdentity[]
+  watches Watch[]
+  alerts Alert[]
+}
+model SocialIdentity {
+  id String @id @default(uuid())
+  issuer String
+  subject String
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  @@unique([issuer, subject])
+}
+model DeviceSession {
+  id String @id @default(uuid())
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deviceName String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  refreshTokens RefreshToken[]
+  @@index([accountId])
+}
+model RefreshToken {
+  hash String @id
+  sessionId String
+  session DeviceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  usedAt DateTime?
+}
+model LoginChallenge {
+  id String @id @default(uuid())
+  email String?
+  kind String
+  secretHash String
+  attempts Int @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  consumedAt DateTime?
+  @@index([email, createdAt])
+}
+model Watch {
+  id String @id @default(uuid())
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  kind String
+  config Json
+  baseline Json?
+  createdAt DateTime @default(now())
+  lastCheckedAt DateTime?
+  alerts Alert[]
+  @@index([accountId])
+}
+model Alert {
+  id String @id @default(uuid())
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  watchId String
+  watch Watch @relation(fields: [watchId], references: [id], onDelete: Cascade)
+  message String
+  dedupeKey String @unique
+  createdAt DateTime @default(now())
+  readAt DateTime?
+  @@index([accountId, createdAt])
+}
+
+model ProviderHealth {
+  retailer String @id
+  snapshot Json
+  updatedAt DateTime @updatedAt
 }

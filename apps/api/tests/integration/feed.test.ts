@@ -71,7 +71,9 @@ test('imports atomically, preserves newer observations, and rejects unmapped pro
     const rows = await prisma.retailerOffer.findMany({ where: { productId } });
     assert.equal(rows.length, 1);
     assert.equal(rows[0].pricePaise, 6000);
+    assert.equal(await prisma.priceSnapshot.count({ where: { productId } }), 2);
   } finally {
+    await prisma.priceSnapshot.deleteMany({ where: { productId } });
     await prisma.retailerOffer.deleteMany({ where: { productId } });
     await prisma.product.deleteMany({ where: { id: productId } });
     await prisma.$disconnect();

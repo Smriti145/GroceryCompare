@@ -2,7 +2,10 @@
   "name": "grocery-compare",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["apps/mobile", "apps/api"],
+  "workspaces": [
+    "apps/mobile",
+    "apps/api"
+  ],
   "scripts": {
     "start": "npm run start --workspace @grocerycompare/mobile",
     "android": "npm run android --workspace @grocerycompare/mobile",
@@ -20,5 +23,7 @@
     "test:integration": "npm run test:integration --workspace @grocerycompare/api",
     "check": "npm run lint && npm run check --workspace @grocerycompare/mobile && npm run check --workspace @grocerycompare/api"
   },
-  "engines": { "node": ">=22.11.0" }
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }

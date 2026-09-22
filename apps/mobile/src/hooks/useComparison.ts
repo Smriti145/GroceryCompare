@@ -1,8 +1,13 @@
+import type { Preferences } from '../../../../packages/contracts/preferences';
 import { useQuery } from '@tanstack/react-query';
 import { compareCart } from '../api/comparisonApi';
 import type { ComparisonRequest } from '../../../../packages/contracts';
 export function useComparison(
-  request: ComparisonRequest & { maxDeliveries?: number; couponCode?: string },
+  request: ComparisonRequest & {
+    maxDeliveries?: number;
+    couponCode?: string;
+    preferences?: Preferences;
+  },
 ) {
   return useQuery({
     queryKey: ['comparison', request],

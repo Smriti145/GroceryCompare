@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client';
 import prisma from '../config/prisma';
+import { Prisma } from '@prisma/client';
 import { normalizePack } from '../domain/comparison';
 import { RetailerAdapter, validateFeed } from './retailer-feed';
 
@@ -33,6 +33,19 @@ export async function importFeed(adapter: RetailerAdapter, payload: unknown) {
         const where = { retailer_sku_location_storeId_sellerId: identity };
         const previous = await tx.retailerOffer.findUnique({ where });
         const observedAt = new Date(offer.observedAt);
+        await tx.priceSnapshot.createMany({
+          data: [
+            {
+              ...identity,
+              productId: offer.productId,
+              packSize: offer.packSize,
+              pricePaise: offer.pricePaise,
+              inStock: offer.inStock,
+              observedAt,
+            },
+          ],
+          skipDuplicates: true,
+        });
         if (previous && previous.observedAt >= observedAt) continue;
         const data = {
           ...offer,

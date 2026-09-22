@@ -1,6 +1,9 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import PreferencesScreen from '../screens/PreferencesScreen';
+import AccountScreen from '../screens/AccountScreen';
+import InsightsScreen from '../screens/InsightsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CartScreen from '../screens/CartScreen';
 import ComparisonScreen from '../screens/ComparisonScreen';
@@ -23,6 +26,7 @@ export default function AppNavigator() {
       }}
     >
       <Stack.Navigator
+        initialRouteName="Home"
         screenOptions={{
           headerShadowVisible: false,
           headerTintColor: Colors.primary,
@@ -30,6 +34,21 @@ export default function AppNavigator() {
           contentStyle: { backgroundColor: Colors.background },
         }}
       >
+        <Stack.Screen
+          name="Preferences"
+          component={PreferencesScreen}
+          options={{ title: 'Preferences' }}
+        />
+        <Stack.Screen
+          name="Account"
+          component={AccountScreen}
+          options={{ title: 'Account & alerts' }}
+        />
+        <Stack.Screen
+          name="Insights"
+          component={InsightsScreen}
+          options={{ title: 'Product insights' }}
+        />
         <Stack.Screen
           name="Home"
           component={HomeScreen}

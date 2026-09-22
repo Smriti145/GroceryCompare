@@ -1,3 +1,4 @@
+import { usePreferenceStore } from '../store/preferenceStore';
 import React, { useState } from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { useCartStore } from '../store/cartStore';
@@ -75,7 +76,9 @@ export default function ComparisonScreen() {
   const [maxDeliveries, setMaxDeliveries] = useState(2);
   const [couponDraft, setCouponDraft] = useState('');
   const [couponCode, setCouponCode] = useState('');
+  const preferences = usePreferenceStore(s => s.preferences);
   const query = useComparison({
+    preferences,
     location,
     maxDeliveries,
     couponCode,
@@ -108,6 +111,17 @@ export default function ComparisonScreen() {
       ]}
     >
       <Text style={styles.heading}>Checkout comparison · {location}</Text>
+      <Text style={styles.text}>
+        Ranking: {preferences.mode.toLowerCase()}. ETA is when the last delivery
+        arrives.
+      </Text>
+      {result.recommended ? (
+        <PlanCard
+          title="Recommended for you"
+          plan={result.recommended}
+          names={names}
+        />
+      ) : null}
       <Text style={styles.text}>Maximum deliveries: {maxDeliveries}</Text>
       <View style={styles.options}>
         {[1, 2, 3].map(count => (
@@ -135,6 +149,15 @@ export default function ComparisonScreen() {
         variant="secondary"
         onPress={() => setCouponCode(couponDraft.trim())}
       />
+      {result.providerStatuses
+        ?.filter(p => p.status === 'TEMPORARILY_UNAVAILABLE')
+        .map(p => (
+          <Text key={p.retailer} style={styles.text}>
+            {p.retailer} temporarily unavailable. Other verified offers are
+            still compared; any retained observations keep their original
+            expiry.
+          </Text>
+        ))}
       {!result.recommended ? (
         <EmptyState message="No verified checkout is available for the entire basket. Coverage, stock quantities, fresh prices and complete fees are all required." />
       ) : null}

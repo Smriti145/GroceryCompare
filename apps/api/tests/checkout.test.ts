@@ -138,3 +138,41 @@ test('reports truncation instead of claiming optimality for a large search', () 
   assert.equal(r.search.complete, false);
   assert.equal(r.search.evaluated, 50000);
 });
+
+test('preference modes rank complete plans and enforce platform and ETA limits', async () => {
+  const { preferencesSchema } = await import('../src/domain/preferences');
+  const cheap = store('z', [1000, 1000]);
+  cheap.store.etaMinutes = 40;
+  const fast = store('b', [1500, 1500]);
+  fast.store.etaMinutes = 10;
+  const run = (p: unknown) =>
+    optimizeBasket(
+      '560001',
+      items,
+      [cheap, fast],
+      now,
+      2,
+      [],
+      undefined,
+      preferencesSchema.parse(p),
+    );
+  assert.equal(
+    run({ mode: 'CHEAPEST' }).recommended?.deliveries[0].store.id,
+    'z',
+  );
+  assert.equal(
+    run({ mode: 'FASTEST' }).recommended?.deliveries[0].store.id,
+    'b',
+  );
+  assert.equal(
+    run({ mode: 'BALANCED' }).recommended?.deliveries[0].store.id,
+    'b',
+  );
+  assert.equal(
+    run({ avoidedRetailers: ['ZEPTO'] }).recommended?.deliveries[0].store.id,
+    'b',
+  );
+  assert.equal(run({ maxEtaMinutes: 5 }).recommended, null);
+  assert.equal(run({ singlePlatformOnly: true }).bestSplit, null);
+  assert.throws(() => preferencesSchema.parse({ maxEtaMinutes: -1 }));
+});

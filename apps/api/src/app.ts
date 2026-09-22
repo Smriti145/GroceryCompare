@@ -1,16 +1,22 @@
+// Load explicit/local configuration before Prisma's dependency graph initializes.
+import { env } from './config/env';
+import { providerRoutes } from './integrations/poll-feed';
+import { accountRoutes } from './routes/account.routes';
+import { historyRoutes } from './routes/history.routes';
+import { alertsRoutes } from './routes/alerts.routes';
+import { EmailSender } from './auth/service';
 import { randomUUID } from 'node:crypto';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
-import { env } from './config/env';
 import prisma from './config/prisma';
 import productRoutes from './routes/products.routes';
 import comparisonRoutes from './routes/comparison.routes';
 import { checkoutRoutes } from './routes/checkout.routes';
 import { ApiError, errorHandler } from './middleware/errors';
 const requestIdPattern = /^[A-Za-z0-9_-]{8,64}$/;
-export function createApp() {
+export function createApp(options: { emailSender?: EmailSender } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', env.TRUST_PROXY_HOPS);
@@ -83,6 +89,10 @@ export function createApp() {
   app.use(express.json({ limit: '32kb' }));
   if (env.NODE_ENV !== 'production') app.use('/api/products', productRoutes);
   app.use('/api/checkout', checkoutRoutes);
+  app.use('/api/account', accountRoutes(options.emailSender));
+  app.use('/api/history', historyRoutes);
+  app.use('/api/alerts', alertsRoutes);
+  app.use('/api/providers', providerRoutes);
   if (env.NODE_ENV !== 'production') app.use('/api/compare', comparisonRoutes);
   app.use((_req, _res, next) =>
     next(new ApiError(404, 'NOT_FOUND', 'Endpoint not found')),

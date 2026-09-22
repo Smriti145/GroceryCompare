@@ -46,6 +46,7 @@ export interface BasketPlan {
   deliveryCount: number;
 }
 export interface CheckoutComparison {
+  providerStatuses?: { retailer: Retailer; status: string }[];
   pincode: string;
   singles: BasketPlan[];
   bestSingle: BasketPlan | null;

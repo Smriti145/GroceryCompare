@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import {
+  Preferences,
+  defaultPreferences,
+} from '../../../../packages/contracts/preferences';
+import { rankPlans } from './preferences';
+import {
   BasketLine,
   BasketPlan,
   CheckoutComparison,
@@ -136,13 +141,6 @@ const plan = (deliveries: DeliveryPlan[]): BasketPlan => ({
     0,
   ),
 });
-const order = (a: BasketPlan, b: BasketPlan) =>
-  a.finalPayablePaise - b.finalPayablePaise ||
-  a.deliveryCount - b.deliveryCount ||
-  a.deliveries
-    .map(d => d.store.id)
-    .join()
-    .localeCompare(b.deliveries.map(d => d.store.id).join());
 
 export function optimizeBasket(
   pincode: string,
@@ -152,6 +150,7 @@ export function optimizeBasket(
   maxDeliveries = 2,
   entitlements: readonly string[] = [],
   couponCode?: string,
+  preferences: Preferences = defaultPreferences,
 ): CheckoutComparison {
   if (
     !items.length ||
@@ -164,6 +163,15 @@ export function optimizeBasket(
     throw new Error('Invalid basket');
   if (![1, 2, 3].includes(maxDeliveries))
     throw new Error('Invalid delivery limit');
+  const order = rankPlans(preferences);
+  stores = stores.filter(
+    s =>
+      s.store.pincode === pincode &&
+      !preferences.avoidedRetailers.includes(s.store.retailer) &&
+      (preferences.maxEtaMinutes === null ||
+        s.store.etaMinutes <= preferences.maxEtaMinutes),
+  );
+  if (preferences.singlePlatformOnly) maxDeliveries = 1;
   const unavailable: CheckoutComparison['unavailable'] = [];
   const singles: BasketPlan[] = [];
   for (const store of stores) {

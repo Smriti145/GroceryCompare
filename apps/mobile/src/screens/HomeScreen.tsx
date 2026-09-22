@@ -74,6 +74,16 @@ export default function HomeScreen({
   const storageError = useCartStore(s => s.storageError);
   const header = (
     <View>
+      <PrimaryButton
+        title="Shopping preferences"
+        variant="secondary"
+        onPress={() => navigation.navigate('Preferences')}
+      />
+      <PrimaryButton
+        title="Account & alerts"
+        variant="secondary"
+        onPress={() => navigation.navigate('Account')}
+      />
       <Text style={styles.eyebrow}>A LITTLE COMPARISON. MORE SAVINGS.</Text>
       <Text style={styles.heading}>Your groceries.{'\n'}A better price.</Text>
       <Text style={styles.description}>
@@ -166,6 +176,12 @@ export default function HomeScreen({
           ListHeaderComponent={header}
           renderItem={({ item }) => (
             <ProductCard
+              onInsights={() =>
+                navigation.navigate('Insights', {
+                  productId: item.id,
+                  name: item.name,
+                })
+              }
               item={item}
               count={
                 cart.find(line => line.product.id === item.id)?.quantity || 0

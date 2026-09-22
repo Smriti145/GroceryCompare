@@ -12,6 +12,7 @@ interface CartState {
   setQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
+  replaceProduct: (originalId: string, product: Product) => boolean;
   finishHydration: (error?: unknown) => void;
 }
 export const useCartStore = create<CartState>()(
@@ -51,6 +52,30 @@ export const useCartStore = create<CartState>()(
         set(state => ({
           cart: state.cart.filter(line => line.product.id !== id),
         })),
+      replaceProduct: (originalId, product) => {
+        let changed = false;
+        set(state => {
+          const original = state.cart.find(i => i.product.id === originalId);
+          const target = state.cart.find(i => i.product.id === product.id);
+          if (originalId === product.id) return state;
+          const quantity = (original?.quantity ?? 1) + (target?.quantity ?? 0);
+          if (
+            quantity > 99 ||
+            (!original && !target && state.cart.length >= 100)
+          )
+            return state;
+          changed = true;
+          return {
+            cart: [
+              ...state.cart.filter(
+                i => i.product.id !== originalId && i.product.id !== product.id,
+              ),
+              { product, quantity },
+            ],
+          };
+        });
+        return changed;
+      },
       clearCart: () => set({ cart: [] }),
     }),
     {

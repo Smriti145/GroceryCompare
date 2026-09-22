@@ -14,12 +14,14 @@ const icons: Record<string, string> = {
 interface Props {
   item: Product;
   onAdd: () => void;
+  onInsights?: () => void;
   disabled?: boolean;
   count?: number;
 }
 export default function ProductCard({
   item,
   onAdd,
+  onInsights,
   disabled,
   count = 0,
 }: Props) {
@@ -43,6 +45,13 @@ export default function ProductCard({
           </Text>
         </View>
       </View>
+      {onInsights ? (
+        <PrimaryButton
+          title="Price history & alternatives"
+          variant="secondary"
+          onPress={onInsights}
+        />
+      ) : null}
       <View style={styles.offers}>
         {item.variants.map(offer => (
           <View key={offer.id} style={styles.offer}>

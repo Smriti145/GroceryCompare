@@ -16,7 +16,12 @@
     "check": "npm run typecheck && npm test && npm run build",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "ts-node prisma/seed.ts",
-    "test:integration": "node --test -r ts-node/register tests/integration/*.test.ts"
+    "test:integration": "node --test -r ts-node/register tests/integration/*.test.ts",
+    "alerts:run": "ts-node scripts/alerts.ts",
+    "feeds:poll": "ts-node scripts/poll-feeds.ts",
+    "account:role": "ts-node scripts/account-role.ts",
+    "worker": "ts-node scripts/worker.ts",
+    "worker:start": "node dist/apps/api/scripts/worker.js"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +34,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
+    "jose": "^6.2.12",
+    "nodemailer": "^10.0.10",
     "prisma": "^6.16.2",
     "zod": "^4.5.4"
   },
@@ -36,6 +43,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.3",
+    "@types/nodemailer": "^8.0.2",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

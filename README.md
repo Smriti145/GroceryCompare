@@ -21,7 +21,7 @@ Generated dependencies and build output are ignored. Install JavaScript dependen
 
 ## Quick start with local PostgreSQL
 
-Use Node 22.11+ and install the React Native native build prerequisites. With PostgreSQL binaries on your `PATH`:
+Use Node 22.13+ and install the React Native native build prerequisites. With PostgreSQL binaries on your `PATH`:
 
 ```sh
 npm ci
@@ -82,6 +82,21 @@ Integration checks require a migrated, seeded test database. Never point them at
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/TEST_DB npm run test:integration
 ```
 
+## Accounts, preferences, price history and alerts
+
+Home now links to shopping preferences and Account & alerts. Product cards open
+7/30-day price insights, offer watches and confirmed substitution suggestions.
+Signed-in accounts support email codes, rotated sessions, device revocation, data
+export/deletion, and saved preferences. The backend includes OIDC token verification
+and admin roles. Feed polling and alert evaluation run in a separate worker.
+
+See [Accounts and insights setup](apps/api/ACCOUNTS_AND_INSIGHTS.md) for configuration,
+API contracts, ranking/analytics definitions, worker commands, and current limits.
+SMTP/social credentials and authorized feeds are not configured. Alerts currently
+use the in-app inbox; native social login and persistent secure token storage remain
+integrations. Existing imports start collecting price history from their actual
+observation timestamps.
+
 ## Architecture and API
 
 The authorized-feed import foundation and its current limitations are documented in
@@ -98,7 +113,7 @@ The authorized-feed import foundation and its current limitations are documented
 | `GET /health/live` | Process liveness |
 | `GET /health/ready` | Database readiness; returns 503 when unavailable |
 | `POST /api/checkout/location` | Resolves location and returns verified serving stores and local ETAs; GPS/address needs a configured geocoder |
-| `GET /api/checkout/products` | Requires `pincode`; accepts `search`, `category`, UUID `cursor`, and `limit` |
+| `GET /api/checkout/products` | Requires `location` (a six-digit pincode); accepts `search`, `category`, UUID `cursor`, and `limit` |
 | `POST /api/checkout/compare` | Accepts `{ "location": { "pincode": "560001" }, "items": [{ "productId": "UUID", "quantity": 2 }], "maxDeliveries": 2 }`; optional `couponCode` |
 
 Comparisons accept 1–100 distinct products and quantities from 1–99. Plans require fresh stock, verified store coverage, equivalent packs, and a complete checkout tariff. Totals include delivery, handling, surge and small-cart fees, eligible public coupons, and minimum-order rules. The engine supports verified membership entitlements, but the public API grants none until account verification is integrated. Split plans recalculate fees for each store; bounded searches disclose when incomplete. These are tariff estimates, not reserved retailer checkout quotes. See [Checkout engine](apps/api/CHECKOUT_ENGINE.md) for matching, imports, and rollout limits. Legacy `/api/products` and `/api/compare` endpoints are available only outside production.
@@ -111,4 +126,4 @@ For a fresh database, use the API `db:migrate` script. For a database created fr
 
 Generate the Prisma client, run the build, and apply reviewed migrations as a separate release step. Start the compiled API with `npm run start --workspace @grocerycompare/api`; its entry point is `apps/api/dist/apps/api/src/server.js`.
 
-Before a real launch, connect authorized retailer feeds, provision managed PostgreSQL with tested backups, centralize logs and metrics, move rate limiting to shared infrastructure, add authentication for private or administrative features, run capacity tests, and validate signed Android and iOS releases on supported devices.
+Before a real launch, connect authorized retailer feeds, provision managed PostgreSQL with tested backups, centralize logs and metrics, move rate limiting to shared infrastructure, configure and validate account login and administrative access, run capacity tests, and validate signed Android and iOS releases on supported devices.
