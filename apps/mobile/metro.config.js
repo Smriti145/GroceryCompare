@@ -9,7 +9,8 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
  */
 const workspaceRoot = path.resolve(__dirname, '../..');
 const config = {
-  watchFolders: [path.join(workspaceRoot, 'packages')],
+  // Hoisted dependencies and shared contracts must both be visible to Metro.
+  watchFolders: [workspaceRoot],
   resolver: {
     nodeModulesPaths: [
       path.join(__dirname, 'node_modules'),
