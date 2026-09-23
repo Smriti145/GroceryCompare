@@ -34,7 +34,7 @@
     "@opentelemetry/sdk-node": "^0.222.0",
     "@prisma/client": "^6.16.2",
     "@sentry/node": "^11.0.0",
-    "bullmq": "^5.81.5",
+    "bullmq": "^6.3.8",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
