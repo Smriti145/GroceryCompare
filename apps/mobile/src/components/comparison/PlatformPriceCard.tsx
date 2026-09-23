@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PlatformComparison } from '../../models/Comparison';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles, useColors } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 import { formatMoney } from '../../utils/money';
 export default function PlatformPriceCard({
   result,
@@ -10,6 +11,9 @@ export default function PlatformPriceCard({
   result: PlatformComparison;
   recommended?: boolean;
 }) {
+  const styles = useThemeStyles(themedStyles);
+  const Colors = useColors();
+
   const platformColor =
     result.platform === 'BLINKIT'
       ? Colors.blinkit
@@ -65,7 +69,7 @@ export default function PlatformPriceCard({
     </View>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
     borderRadius: 20,

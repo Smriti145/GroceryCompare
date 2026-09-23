@@ -1,0 +1,8 @@
+# Local sink only. Configure an authenticated receiver before production.
+route:
+  receiver: local
+  group_by: [alertname]
+  group_wait: 30s
+  repeat_interval: 4h
+receivers:
+  - name: local

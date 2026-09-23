@@ -1,3 +1,4 @@
+import { invalidateLocations } from '../infrastructure/redis';
 import { z } from 'zod';
 import prisma from '../config/prisma';
 import { fingerprint, matchProduct } from '../domain/matching';
@@ -17,6 +18,7 @@ export const listingSchema = z
 async function candidates() {
   // Fail explicitly until a larger catalog has an indexed candidate retrieval strategy.
   const rows = await prisma.product.findMany({
+    where: { deletedAt: null },
     orderBy: { id: 'asc' },
     take: 10001,
   });
@@ -69,9 +71,16 @@ export async function correctMapping(payload: unknown) {
     reviewedBy: correction.reviewedBy,
     reason: correction.reason,
   };
-  return prisma.canonicalMapping.upsert({
-    where: { retailer_sku: { retailer: data.retailer, sku: data.sku } },
-    create: data,
-    update: data,
+  const result = await prisma.$transaction(async tx => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(1847291)`;
+    const mapping = await tx.canonicalMapping.upsert({ where: { retailer_sku: { retailer: data.retailer, sku: data.sku } }, create: data, update: data });
+    await tx.retailerProduct.upsert({ where: { retailer_sku: { retailer: data.retailer, sku: data.sku } }, create: { retailer: data.retailer, sku: data.sku, title: correction.listing.title, packSize: correction.listing.packSize, canonicalId: data.productId, status: 'MATCHED' }, update: { canonicalId: data.productId, status: 'MATCHED' } });
+    // Current observations mapped to the old canonical identity must be re-imported after review.
+    await tx.retailerOffer.updateMany({ where: { retailer: data.retailer, sku: data.sku, productId: { not: data.productId } }, data: { inStock: false, stockQuantity: 0 } });
+    const actor = await tx.account.findUnique({ where: { id: correction.reviewedBy }, select: { id: true } });
+    await tx.auditLog.create({ data: { actorId: actor?.id, action: 'MAPPING_CORRECTED', objectType: 'CanonicalMapping', objectId: mapping.id, reason: correction.reason } });
+    return mapping;
   });
+  const locations = await prisma.retailerOffer.findMany({ where: { retailer: data.retailer, sku: data.sku }, distinct: ['location'], select: { location: true } });
+  await invalidateLocations(locations.map(l=>l.location)); return result;
 }

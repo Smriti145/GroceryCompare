@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { CartItem } from '../../models/Cart';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 import PrimaryButton from '../common/PrimaryButton';
 interface Props {
   item: CartItem;
@@ -9,6 +10,8 @@ interface Props {
   onRemove: () => void;
 }
 export default function CartItemCard({ item, onQuantity, onRemove }: Props) {
+  const styles = useThemeStyles(themedStyles);
+
   return (
     <View style={styles.card}>
       <Text style={styles.name}>{item.product.name}</Text>
@@ -50,7 +53,7 @@ export default function CartItemCard({ item, onQuantity, onRemove }: Props) {
     </View>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,

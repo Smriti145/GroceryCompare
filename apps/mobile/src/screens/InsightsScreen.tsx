@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, Alert } from 'react-native';
+import { ScrollView, Text, View, Alert, TextInput } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -10,7 +10,7 @@ import { useSessionStore } from '../store/sessionStore';
 import { useCartStore } from '../store/cartStore';
 import { Product } from '../models/Product';
 import PrimaryButton from '../components/common/PrimaryButton';
-import { featureStyles as s } from '../theme/features';
+import { useFeatureStyles } from '../theme/features';
 import { formatMoney } from '../utils/money';
 interface Series {
   retailer: string;
@@ -32,6 +32,8 @@ export default function InsightsScreen({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Insights'>) {
+  const s = useFeatureStyles();
+  const [report,setReport]=useState('');
   const { productId, name } = route.params;
   const pincode = useAppStore(v => v.location),
     preferences = usePreferenceStore(v => v.preferences),
@@ -75,6 +77,11 @@ export default function InsightsScreen({
         )
       ).data,
   });
+  const quantity = useCartStore(v => v.cart.find(i => i.product.id === productId)?.quantity ?? 1);
+  const packs = useQuery({
+    queryKey: ['packs', productId, quantity, pincode], enabled: /^[1-9][0-9]{5}$/.test(pincode),
+    queryFn: async ({signal}) => (await api.post<{product:Product; quantity:number; retailer:string; storeId:string; itemTotalPaise:number; savingsPaise:number|null; explanation:string}[]>('/checkout/packs', {productId,quantity,pincode}, {signal})).data,
+  });
   const maximum = Math.max(
     1,
     ...(history.data?.graph.map(v => v.pricePaise) || []),
@@ -99,6 +106,15 @@ export default function InsightsScreen({
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>
       <Text style={s.title}>{name}</Text>
+      <Text style={s.heading}>Equivalent pack sizes</Text>
+      <Text style={s.text}>Same brand, product and variant; item totals before fees.</Text>
+      {packs.isError ? <PrimaryButton title="Retry pack comparison" onPress={()=>{void packs.refetch();}} /> : null}
+      {!packs.isPending && !packs.data?.length ? <Text style={s.text}>No verified equivalent packs available here.</Text> : null}
+      {packs.data?.map(p => <View key={`${p.product.id}:${p.retailer}:${p.storeId}`} style={s.card}>
+        <Text style={s.text}>{p.quantity} × {p.product.quantity} · {p.retailer} · {formatMoney(p.itemTotalPaise)}</Text>
+        <Text style={s.text}>{p.explanation}{p.savingsPaise !== null && p.savingsPaise > 0 ? ` Save ${formatMoney(p.savingsPaise)} on items at this store.` : ''}</Text>
+        <PrimaryButton title="Use these packs" variant="secondary" onPress={()=>Alert.alert('Replace pack size?', p.explanation, [{text:'Cancel',style:'cancel'},{text:'Replace',onPress:()=>setMessage(useCartStore.getState().replaceEquivalent(productId,p.product,p.quantity) ? 'Basket updated. Compare again to apply preferences and checkout fees.' : 'Basket quantity limit reached.')}])} />
+      </View>)}
       <Text style={s.heading}>Price history</Text>
       <Text style={s.text}>
         Item prices before checkout fees. Each graph is for one retailer, SKU,
@@ -224,6 +240,7 @@ export default function InsightsScreen({
           onPress={() => navigation.navigate('Account')}
         />
       )}
+      {tokens ? <View style={s.card}><Text style={s.heading}>Report a product issue</Text><TextInput style={s.input} accessibilityLabel="Product issue" value={report} onChangeText={setReport} placeholder="Describe an incorrect price or product mapping" maxLength={1000} multiline /><PrimaryButton title="Send report" disabled={busy || report.trim().length<10} onPress={()=>{setBusy(true);void api.post('/reports',{productId,message:report.trim()}).then(()=>{setReport('');setMessage('Report sent for review.');}).catch(e=>setMessage(errorMessage(e))).finally(()=>setBusy(false));}} /></View>:null}
       <Text style={s.text} accessibilityLiveRegion="polite">
         {message}
       </Text>

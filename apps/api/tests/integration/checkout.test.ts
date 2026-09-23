@@ -73,6 +73,7 @@ test('HTTP serviceability and checkout respect coverage and fee-inclusive split 
       [20000, 56600],
       [60000, 50000],
     ];
+    for (const c of coverage) for (const id of ids) await prisma.retailerProduct.create({data:{retailer:c.retailer,sku:id,title:'Test',packSize:'1l',canonicalId:id,status:'MATCHED'}});
     for (const [s, c] of coverage.entries())
       for (const [i, productId] of ids.entries())
         await prisma.retailerOffer.create({

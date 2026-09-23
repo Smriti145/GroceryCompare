@@ -1,3 +1,6 @@
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
 import React, { useState } from 'react';
 import { ScrollView, Text, TextInput, View, Share, Alert } from 'react-native';
 import { defaultPreferences } from '../../../../packages/contracts/preferences';
@@ -12,7 +15,7 @@ import { usePreferenceStore } from '../store/preferenceStore';
 import { useCartStore } from '../store/cartStore';
 import { useAppStore } from '../store/appStore';
 import PrimaryButton from '../components/common/PrimaryButton';
-import { featureStyles as s } from '../theme/features';
+import { useFeatureStyles } from '../theme/features';
 interface Device {
   id: string;
   deviceName: string;
@@ -30,6 +33,8 @@ interface Watch {
   kind: string;
 }
 export default function AccountScreen() {
+  const s = useFeatureStyles();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const tokens = useSessionStore(v => v.tokens),
     setTokens = useSessionStore(v => v.setTokens);
   const preferences = usePreferenceStore(v => v.preferences),
@@ -92,6 +97,7 @@ export default function AccountScreen() {
   }
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>
+      {tokens ? <PrimaryButton title="Saved baskets" variant="secondary" onPress={()=>navigation.navigate('SavedBaskets')} /> : null}
       <Text style={s.title}>Your account</Text>
       {!tokens ? (
         <>

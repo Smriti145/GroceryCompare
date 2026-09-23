@@ -1,8 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Platform } from '../../models/Product';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 export default function WinnerCard({ winner }: { winner: Platform | null }) {
+  const styles = useThemeStyles(themedStyles);
+
   return (
     <View style={styles.card}>
       <Text style={styles.label}>RECOMMENDED</Text>
@@ -14,7 +17,7 @@ export default function WinnerCard({ winner }: { winner: Platform | null }) {
     </View>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   card: {
     backgroundColor: Colors.accentSoft,
     borderRadius: 20,

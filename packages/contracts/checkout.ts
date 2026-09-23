@@ -35,6 +35,7 @@ export interface CostBreakdown {
   finalPayablePaise: number;
 }
 export interface DeliveryPlan {
+  itemCosts?: { productId: string; totalPaise: number }[];
   store: ServiceStore;
   items: BasketLine[];
   costs: CostBreakdown;
@@ -46,6 +47,8 @@ export interface BasketPlan {
   deliveryCount: number;
 }
 export interface CheckoutComparison {
+  explanation?: string;
+  itemSavings?: { productId: string; savingsPaise: number }[];
   providerStatuses?: { retailer: Retailer; status: string }[];
   pincode: string;
   singles: BasketPlan[];

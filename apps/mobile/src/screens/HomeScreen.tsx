@@ -1,3 +1,6 @@
+import {useQuery} from '@tanstack/react-query';
+import ProductSkeleton from '../components/common/ProductSkeleton';
+import { useSearchHistory } from '../store/searchHistory';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -21,16 +24,21 @@ import ProductCard from '../components/product/ProductCard';
 import FloatingCart from '../components/cart/FloatingCart';
 import EmptyState from '../components/common/EmptyState';
 import PrimaryButton from '../components/common/PrimaryButton';
-import Loader from '../components/common/Loader';
 import { errorMessage } from '../api/axios';
-import { Colors } from '../theme/colors';
+import { useThemeStyles, useColors } from '../theme/useTheme';
+import type { Palette } from '../theme/colors';
 import api from '../api/axios';
 const categories = ['All', 'Dairy', 'Staples', 'Snacks'];
 export default function HomeScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
+  const styles = useThemeStyles(themedStyles);
+  const Colors = useColors();
+
   const insets = useSafeAreaInsets();
+  const recent = useSearchHistory(s => s.recent), remember = useSearchHistory(s => s.remember);
   const location = useAppStore(s => s.location);
+  const popular = useQuery({queryKey:['popular-searches',location],enabled:/^[1-9][0-9]{5}$/.test(location),staleTime:60000,queryFn:async({signal})=>(await api.get<{term:string}[]>('/search/popular',{params:{pincode:location},signal})).data});
   const setLocation = useAppStore(s => s.setLocation);
   const [area, setArea] = useState(location);
   const [coverageMessage, setCoverageMessage] = useState(
@@ -84,6 +92,7 @@ export default function HomeScreen({
         variant="secondary"
         onPress={() => navigation.navigate('Account')}
       />
+      {!search && popular.data?.length ? <View><Text style={styles.description}>Popular near you</Text>{popular.data.slice(0,5).map(p=><PrimaryButton key={p.term} title={p.term} variant="secondary" onPress={()=>setSearch(p.term)} />)}</View> : null}
       <Text style={styles.eyebrow}>A LITTLE COMPARISON. MORE SAVINGS.</Text>
       <Text style={styles.heading}>Your groceries.{'\n'}A better price.</Text>
       <Text style={styles.description}>
@@ -117,7 +126,8 @@ export default function HomeScreen({
         </View>
         <Text style={styles.hint}>{coverageMessage}</Text>
       </View>
-      <SearchBar value={search} onChange={setSearch} />
+      <SearchBar value={search} onChange={setSearch} onSubmit={() => { remember(location, search); void api.post('/search/event', { pincode: location, term: search }).catch(() => {}); }} />
+      {(recent[location] || []).slice(0,5).map(term => <PrimaryButton key={term} title={`Recent: ${term}`} variant="secondary" onPress={() => setSearch(term)} />)}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -174,6 +184,8 @@ export default function HomeScreen({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={header}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => { if (products.hasNextPage && !products.isFetching && !products.isError) void products.fetchNextPage(); }}
           renderItem={({ item }) => (
             <ProductCard
               onInsights={() =>
@@ -186,7 +198,7 @@ export default function HomeScreen({
               count={
                 cart.find(line => line.product.id === item.id)?.quantity || 0
               }
-              onAdd={() => addToCart(item)}
+              onAdd={() => { addToCart(item); void api.post('/search/event',{pincode:location,term:item.name.slice(0,40),productId:item.id}).catch(()=>{}); }}
               disabled={
                 !hydrated ||
                 (cart.length >= 100 &&
@@ -201,7 +213,7 @@ export default function HomeScreen({
             !location ? (
               <EmptyState message="Enter your delivery pincode to find available groceries." />
             ) : products.isPending ? (
-              <Loader />
+              <ProductSkeleton />
             ) : products.isError ? (
               <EmptyState
                 message={errorMessage(products.error)}
@@ -256,7 +268,7 @@ export default function HomeScreen({
     </KeyboardAvoidingView>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   flex: { flex: 1 },
   container: {
     flex: 1,

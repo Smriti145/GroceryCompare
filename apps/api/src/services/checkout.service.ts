@@ -1,3 +1,5 @@
+import { explain } from '../domain/explain';
+import { cached } from '../infrastructure/redis';
 import prisma from '../config/prisma';
 import { Prisma } from '@prisma/client';
 import { env } from '../config/env';
@@ -28,6 +30,8 @@ export async function checkout(
     productId: { in: items.map(i => i.productId) },
     location: location.pincode,
     inStock: true,
+    product: { deletedAt: null },
+    listing: { deletedAt: null, status: 'MATCHED' },
     observedAt: {
       lte: now,
       gt: new Date(now.getTime() - env.OFFER_MAX_AGE_SECONDS * 1000),
@@ -39,11 +43,11 @@ export async function checkout(
     })),
   };
   const offers = stores.length
-    ? await prisma.retailerOffer.findMany({
+    ? await cached('retailer-offers', location.pincode, { items: items.map(i => i.productId).sort(), stores: stores.map(s => s.id) }, 10, () => prisma.retailerOffer.findMany({
         where: offerFilter,
         include: { product: true },
         take: 10001,
-      })
+      }))
     : [];
   if (offers.length > 10000) throw new Error('Offer query exceeded capacity');
   for (const row of stores) {
@@ -76,13 +80,13 @@ export async function checkout(
           pricePaise: o.pricePaise,
           stockQuantity: o.stockQuantity,
           expiresAt: new Date(
-            o.observedAt.getTime() + env.OFFER_MAX_AGE_SECONDS * 1000,
+            new Date(o.observedAt).getTime() + env.OFFER_MAX_AGE_SECONDS * 1000,
           ).toISOString(),
         })),
     });
   }
   // Membership entitlements must come from verified account/provider data, never request booleans.
-  return optimizeBasket(
+  const result = optimizeBasket(
     location.pincode,
     items,
     inputs,
@@ -92,4 +96,8 @@ export async function checkout(
     couponCode,
     preferences,
   );
+  result.explanation = explain(result, preferences.mode);
+  const baseline = new Map(result.bestSingle?.deliveries.flatMap(d => d.itemCosts || []).map(i => [i.productId, i.totalPaise]));
+  result.itemSavings = result.recommended?.deliveries.flatMap(d => d.itemCosts || []).filter(i => baseline.has(i.productId)).map(i => ({ productId: i.productId, savingsPaise: baseline.get(i.productId)! - i.totalPaise })) || [];
+  return result;
 }

@@ -1,0 +1,47 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: [redis-server, --appendonly, 'yes', --maxmemory, 256mb, --maxmemory-policy, noeviction]
+    ports: ['127.0.0.1:6379:6379']
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    ports: ['127.0.0.1:9090:9090']
+    extra_hosts: ['host.docker.internal:host-gateway']
+    volumes:
+      - ./ops/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./ops/monitoring/metrics-token:/etc/prometheus/metrics-token:ro
+  blackbox:
+    image: prom/blackbox-exporter:v0.27.0
+    profiles: [monitoring]
+    extra_hosts: ['host.docker.internal:host-gateway']
+    volumes: ['./ops/monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml:ro']
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    profiles: [monitoring]
+    volumes: ['./ops/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro']
+    ports: ['127.0.0.1:9093:9093']
+  grafana:
+    image: grafana/grafana:12.1.1
+    profiles: [monitoring]
+    ports: ['127.0.0.1:3001:3000']
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set a unique GRAFANA_ADMIN_PASSWORD before using this compose file}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - ./ops/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+  otel:
+    image: otel/opentelemetry-collector-contrib:0.133.0
+    profiles: [monitoring]
+    ports: ['127.0.0.1:4318:4318']
+    volumes: ['./ops/monitoring/otel.yml:/etc/otelcol-contrib/config.yaml:ro']
+volumes:
+  redis_data:

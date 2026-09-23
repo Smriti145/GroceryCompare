@@ -1,3 +1,4 @@
+import { useThemeStore, ThemeMode } from '../theme/useTheme';
 import React, { useState } from 'react';
 import { ScrollView, Text, TextInput, Switch, View } from 'react-native';
 import { usePreferenceStore } from '../store/preferenceStore';
@@ -6,8 +7,10 @@ import { Preferences } from '../../../../packages/contracts/preferences';
 import PrimaryButton from '../components/common/PrimaryButton';
 import api, { errorMessage } from '../api/axios';
 import { useSessionStore } from '../store/sessionStore';
-import { featureStyles as s } from '../theme/features';
+import { useFeatureStyles } from '../theme/features';
 export default function PreferencesScreen() {
+  const s = useFeatureStyles();
+  const themeMode = useThemeStore(v => v.mode), setMode = useThemeStore(v => v.setMode);
   const saved = usePreferenceStore(v => v.preferences);
   const setPreferences = usePreferenceStore(v => v.setPreferences);
   const session = useSessionStore(v => v.tokens);
@@ -52,6 +55,8 @@ export default function PreferencesScreen() {
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>
       <Text style={s.title}>Shop your way</Text>
+      <Text style={s.heading}>Appearance</Text>
+      {(['system','light','dark'] as ThemeMode[]).map(value => <PrimaryButton key={value} title={`${value === themeMode ? '✓ ' : ''}${value}`} variant="secondary" onPress={() => setMode(value)} />)}
       <Text style={s.text}>Choose what matters for your next comparison.</Text>
       {(['CHEAPEST', 'FASTEST', 'BALANCED'] as const).map(mode => (
         <PrimaryButton

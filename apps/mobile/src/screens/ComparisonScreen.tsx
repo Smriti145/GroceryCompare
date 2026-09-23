@@ -8,7 +8,8 @@ import Loader from '../components/common/Loader';
 import EmptyState from '../components/common/EmptyState';
 import PrimaryButton from '../components/common/PrimaryButton';
 import { errorMessage } from '../api/axios';
-import { Colors } from '../theme/colors';
+import { useThemeStyles, useColors } from '../theme/useTheme';
+import type { Palette } from '../theme/colors';
 import { formatMoney } from '../utils/money';
 import { BasketPlan } from '../../../../packages/contracts/checkout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +33,8 @@ function PlanCard({
   plan: BasketPlan;
   names: Map<string, string>;
 }) {
+  const styles = useThemeStyles(themedStyles);
+
   const expired = plan.deliveries.some(
     d => Date.parse(d.validUntil) <= Date.now(),
   );
@@ -70,6 +73,9 @@ function PlanCard({
   );
 }
 export default function ComparisonScreen() {
+  const styles = useThemeStyles(themedStyles);
+  const Colors = useColors();
+
   const insets = useSafeAreaInsets();
   const cart = useCartStore(s => s.cart);
   const location = useAppStore(s => s.location);
@@ -115,6 +121,7 @@ export default function ComparisonScreen() {
         Ranking: {preferences.mode.toLowerCase()}. ETA is when the last delivery
         arrives.
       </Text>
+      {result.explanation ? <Text style={styles.text}>{result.explanation}</Text> : null}
       {result.recommended ? (
         <PlanCard
           title="Recommended for you"
@@ -171,6 +178,8 @@ export default function ComparisonScreen() {
       {result.bestSplit ? (
         <PlanCard title="Split basket" plan={result.bestSplit} names={names} />
       ) : null}
+      {result.itemSavings?.some(i=>i.savingsPaise!==0) ? <Text style={styles.heading}>Item savings versus the best single store (before fees)</Text> : null}
+      {result.itemSavings?.filter(i=>i.savingsPaise!==0).map(i=><Text key={i.productId} style={styles.text}>{names.get(i.productId)}: {i.savingsPaise>=0?'save':'costs extra'} {formatMoney(Math.abs(i.savingsPaise))}</Text>)}
       {result.savingsPaise > 0 ? (
         <Text style={styles.heading}>
           Save {formatMoney(result.savingsPaise)} with{' '}
@@ -199,7 +208,7 @@ export default function ComparisonScreen() {
     </ScrollView>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   coupon: {
     minHeight: 48,

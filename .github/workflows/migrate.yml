@@ -1,0 +1,25 @@
+name: Production database migrations
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-database-migrations
+  cancel-in-progress: false
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm}
+      - run: npm ci --ignore-scripts
+      - name: Apply committed migrations
+        env:
+          NODE_ENV: production
+          DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL"
+          npm run db:migrate --workspace @grocerycompare/api

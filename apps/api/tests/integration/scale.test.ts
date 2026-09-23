@@ -1,0 +1,56 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {AddressInfo} from 'node:net';
+import prisma from '../../src/config/prisma';
+import {createApp} from '../../src/app';
+import {requestOtp,verifyOtp} from '../../src/auth/service';
+import {importFeed} from '../../src/integrations/import-feed';
+import {normalizedFeedAdapter} from '../../src/integrations/retailer-feed';
+import {importServiceability} from '../../src/integrations/serviceability';
+import {searchCatalog} from '../../src/services/search.service';
+import {packAlternatives} from '../../src/services/pack.service';
+import {snapshotPage,reconcilePage} from '../../src/jobs/maintenance';
+test('indexed search, pack savings, private carts, shared baskets and audited admin overrides',async()=>{
+ process.env.AUTH_SECRET='scale-integration-secret-'.repeat(3);
+ const ids=[randomUUID(),randomUUID()],store=randomUUID(),email=`${randomUUID()}@example.test`,pincode='999982';
+ let code='';const sender={async send(_email:string,value:string){code=value;}};
+ const server=createApp({emailSender:sender}).listen(0,'127.0.0.1');await new Promise<void>(r=>server.once('listening',r));
+ const base=`http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
+ const request=(path:string,method='GET',body?:unknown,token?:string)=>fetch(base+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},...(body?{body:JSON.stringify(body)}:{})});
+ let shareId='',accountId='';
+ try{
+  for(const [i,id] of ids.entries())await prisma.product.create({data:{id,name:'Milk',brand:'ScaleTest',category:'Dairy',variantName:'Whole',quantity:i?'500ml':'1l'}});
+  await importServiceability([{retailer:'ZEPTO',storeId:store,sellerId:store,warehouseId:store,pincode,entirePincode:true,latitude:null,longitude:null,radiusMeters:null,serving:true,etaMinutes:12,source:'INTEGRATION_TEST',observedAt:new Date(Date.now()-1000).toISOString(),expiresAt:new Date(Date.now()+600000).toISOString(),tariff:null}]);
+  const offers=ids.map((id,i)=>({sku:id,location:pincode,storeId:store,sellerId:store,productId:id,packSize:i?'500ml':'1000ml',pricePaise:i?3000:7000,mrpPaise:null,inStock:true,stockQuantity:10,etaMinutes:null,feesPaise:null,minimumOrderPaise:null,observedAt:new Date(Date.now()-500).toISOString()}));
+  await importFeed(normalizedFeedAdapter('ZEPTO'),{retailer:'ZEPTO',offers});
+  for(const search of ['milk','doodh','दूध','milkk','Dairy'])assert.equal((await searchCatalog({location:pincode,search,limit:10})).products.length,2,search);
+  assert.equal((await searchCatalog({location:'999983',search:'milk',limit:10})).products.length,0);
+  const first=await searchCatalog({location:pincode,search:'milk',limit:1});assert.ok(first.nextCursor);
+  assert.notEqual((await searchCatalog({location:pincode,search:'milk',limit:1,cursor:first.nextCursor!})).products[0].id,first.products[0].id);
+  await assert.rejects(searchCatalog({location:pincode,search:'rice',limit:1,cursor:first.nextCursor!}));
+  const packs=await packAlternatives(ids[0],1,pincode);assert.equal(packs[0].quantity,2);assert.equal(packs[0].savingsPaise,1000);
+  const before=await prisma.priceSnapshot.count({where:{productId:{in:ids}}});await snapshotPage();assert.equal(await prisma.priceSnapshot.count({where:{productId:{in:ids}}}),before);
+  const basket={pincode,items:[{productId:ids[0],quantity:1}]};
+  assert.equal((await request('/carts','POST',{...basket,name:'Test'})).status,401);
+  const otp=await requestOtp(email,sender);const tokens=await verifyOtp(otp.challengeId,code,'Test');
+  accountId=(await prisma.account.findUniqueOrThrow({where:{email}})).id;
+  const saved=await request('/carts','POST',{...basket,name:'Test'},tokens.accessToken);assert.equal(saved.status,201);const savedId=(await saved.json()).id;
+  const shared=await request('/shares','POST',basket);assert.equal(shared.status,201);shareId=(await shared.json()).id;
+  const publicData=await(await request(`/shares/${shareId}`)).json();assert.equal(publicData.products[0].id,ids[0]);assert.equal(publicData.accountId,undefined);assert.equal(publicData.email,undefined);
+  assert.equal((await request('/admin/overview','GET',undefined,tokens.accessToken)).status,403);
+  await prisma.account.update({where:{id:accountId},data:{role:'ADMIN'}});
+  assert.equal((await request('/admin/overview','GET',undefined,tokens.accessToken)).status,200);
+  assert.equal((await request(`/admin/products/${ids[0]}`,'PATCH',{deleted:true,reason:'Integration archive test'},tokens.accessToken)).status,200);
+  assert.equal((await searchCatalog({location:pincode,search:'milk',limit:10})).products.length,1);
+  assert.equal(await prisma.auditLog.count({where:{actorId:accountId,action:'PRODUCT_OVERRIDE'}}),1);
+  await request(`/carts/${savedId}`,'DELETE',undefined,tokens.accessToken);assert.equal((await(await request('/carts','GET',undefined,tokens.accessToken)).json()).length,0);
+  await prisma.comparisonShare.update({where:{id:shareId},data:{expiresAt:new Date(0)}});assert.equal((await request(`/shares/${shareId}`)).status,410);
+  await prisma.retailerProduct.update({where:{retailer_sku:{retailer:'ZEPTO',sku:ids[1]}},data:{canonicalId:ids[0]}});
+  await reconcilePage();assert.equal((await prisma.retailerProduct.findUniqueOrThrow({where:{retailer_sku:{retailer:'ZEPTO',sku:ids[1]}}})).status,'AMBIGUOUS');
+ }finally{
+  await prisma.comparisonShare.deleteMany({where:{id:shareId}});await prisma.account.deleteMany({where:{email}});await prisma.loginChallenge.deleteMany({where:{email}});
+  await prisma.priceSnapshot.deleteMany({where:{productId:{in:ids}}});await prisma.retailerOffer.deleteMany({where:{productId:{in:ids}}});await prisma.serviceArea.deleteMany({where:{storeId:store}});await prisma.deliveryEstimate.deleteMany({where:{storeId:store}});await prisma.retailerProduct.deleteMany({where:{sku:{in:ids}}});await prisma.retailerStore.deleteMany({where:{storeId:store}});await prisma.product.deleteMany({where:{id:{in:ids}}});
+  await new Promise<void>(r=>server.close(()=>r()));await prisma.$disconnect();
+ }
+});

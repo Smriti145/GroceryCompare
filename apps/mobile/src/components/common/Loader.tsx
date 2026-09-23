@@ -1,7 +1,11 @@
 import React from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles, useColors } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 export default function Loader() {
+  const styles = useThemeStyles(themedStyles);
+  const Colors = useColors();
+
   return (
     <View style={styles.container}>
       <ActivityIndicator
@@ -12,7 +16,7 @@ export default function Loader() {
     </View>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
