@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
@@ -69,6 +70,7 @@ export const errorHandler: ErrorRequestHandler = (
   const { status, code, message, retryAfter } = classifyError(error);
   if (retryAfter) res.setHeader('Retry-After', retryAfter);
   if (status >= 500) {
+    if (process.env.SENTRY_DSN) Sentry.captureException(new Error(code));
     console.error(
       JSON.stringify({
         level: 'error',

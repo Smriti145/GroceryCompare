@@ -1,3 +1,6 @@
+import { telemetry } from './instrumentation';
+import { queue } from './jobs/queue';
+import { redis } from './infrastructure/redis';
 import { createApp } from './app';
 import { env } from './config/env';
 import prisma from './config/prisma';
@@ -17,7 +20,7 @@ async function main() {
     }, 10_000);
     deadline.unref();
     server.close(() => {
-      void prisma.$disconnect().then(() => {
+      void Promise.all([prisma.$disconnect(), queue?.close(), redis?.quit(), telemetry?.shutdown()]).then(() => {
         clearTimeout(deadline);
         process.exit(0);
       });

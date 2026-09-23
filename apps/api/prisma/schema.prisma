@@ -15,6 +15,9 @@ model Product {
   retailerOffers RetailerOffer[]
   mappings CanonicalMapping[]
   variantName String @default("")
+  imageUrl String?
+  deletedAt DateTime?
+  retailerListings RetailerProduct[]
   // Tags must come from trusted catalog curation; absence means unknown.
   dietaryTags String[] @default([])
   @@index([category, id])
@@ -44,6 +47,8 @@ model CartItem {
 
 // Authorized source observations, isolated from legacy/demo comparisons.
 model RetailerOffer {
+  directory RetailerStore @relation(fields: [retailer, storeId, sellerId], references: [retailer, storeId, sellerId])
+  listing RetailerProduct @relation(fields: [retailer, sku], references: [retailer, sku])
   id String @id @default(uuid())
   retailer String
   sku String
@@ -67,6 +72,7 @@ model RetailerOffer {
 }
 
 model ServiceArea {
+  directory RetailerStore @relation(fields: [retailer, storeId, sellerId], references: [retailer, storeId, sellerId])
   id String @id @default(uuid())
   retailer String
   storeId String
@@ -125,6 +131,9 @@ model Account {
   role String @default("USER")
   preferences Json @default("{}")
   createdAt DateTime @default(now())
+  savedCarts SavedCart[]
+  auditLogs AuditLog[]
+  reports UserReport[]
   sessions DeviceSession[]
   identities SocialIdentity[]
   watches Watch[]
@@ -195,4 +204,105 @@ model ProviderHealth {
   retailer String @id
   snapshot Json
   updatedAt DateTime @updatedAt
+}
+
+model Retailer {
+  id String @id
+  name String
+  deletedAt DateTime?
+  stores RetailerStore[]
+  products RetailerProduct[]
+}
+model RetailerStore {
+  offers RetailerOffer[]
+  coverage ServiceArea[]
+  id String @id @default(uuid())
+  retailer String
+  storeId String
+  sellerId String
+  warehouseId String?
+  deletedAt DateTime?
+  provider Retailer @relation(fields: [retailer], references: [id])
+  @@unique([retailer, storeId, sellerId])
+}
+model RetailerProduct {
+  offers RetailerOffer[]
+  id String @id @default(uuid())
+  retailer String
+  sku String
+  title String
+  packSize String
+  canonicalId String?
+  status String @default("UNMATCHED")
+  deletedAt DateTime?
+  provider Retailer @relation(fields: [retailer], references: [id])
+  canonical Product? @relation(fields: [canonicalId], references: [id], onDelete: SetNull)
+  @@unique([retailer, sku])
+  @@index([status, id])
+}
+model DeliveryEstimate {
+  id String @id @default(uuid())
+  retailer String
+  storeId String
+  sellerId String
+  pincode String
+  etaMinutes Int
+  observedAt DateTime
+  expiresAt DateTime
+  @@unique([retailer, storeId, sellerId, pincode, observedAt])
+  @@index([pincode, expiresAt])
+}
+model SavedCart {
+  id String @id @default(uuid())
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name String
+  pincode String
+  items Json
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  @@index([accountId, deletedAt])
+}
+model ComparisonShare {
+  id String @id
+  pincode String
+  items Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+model SearchAlias {
+  term String @id
+  replacement String
+  kind String
+}
+model SearchTrend {
+  pincode String
+  term String
+  count Int @default(1)
+  updatedAt DateTime @updatedAt
+  @@id([pincode, term])
+  @@index([pincode, count])
+}
+model AuditLog {
+  id String @id @default(uuid())
+  actorId String?
+  actor Account? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action String
+  objectType String
+  objectId String
+  reason String
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([objectType, objectId])
+}
+model UserReport {
+  id String @id @default(uuid())
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  productId String?
+  message String
+  status String @default("OPEN")
+  createdAt DateTime @default(now())
+  @@index([status, createdAt])
 }

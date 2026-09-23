@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 interface Props {
   title: string;
   onPress: () => void;
@@ -15,6 +16,8 @@ export default function PrimaryButton({
   accessibilityLabel,
   variant = 'primary',
 }: Props) {
+  const styles = useThemeStyles(themedStyles);
+
   return (
     <TouchableOpacity
       accessibilityRole="button"
@@ -37,7 +40,7 @@ export default function PrimaryButton({
     </TouchableOpacity>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   button: {
     backgroundColor: Colors.primary,
     padding: 14,

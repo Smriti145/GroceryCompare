@@ -1,4 +1,8 @@
 import React from 'react';
+import { StatusBar } from 'react-native';
+import SharedBasketScreen from '../screens/SharedBasketScreen';
+import SavedBasketsScreen from '../screens/SavedBasketsScreen';
+import { DarkColors } from '../theme/colors';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PreferencesScreen from '../screens/PreferencesScreen';
@@ -7,14 +11,18 @@ import InsightsScreen from '../screens/InsightsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CartScreen from '../screens/CartScreen';
 import ComparisonScreen from '../screens/ComparisonScreen';
-import { Colors } from '../theme/colors';
+import { useColors } from '../theme/useTheme';
 import { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
+  const Colors = useColors();
+
   return (
     <NavigationContainer
+      linking={{ prefixes: ['grocerycompare://'], config: { screens: { SharedBasket: 'share/:id' } } }}
       theme={{
         ...DefaultTheme,
+        dark: Colors === DarkColors,
         colors: {
           ...DefaultTheme.colors,
           background: Colors.background,
@@ -25,6 +33,7 @@ export default function AppNavigator() {
         },
       }}
     >
+      <StatusBar barStyle={Colors === DarkColors ? "light-content" : "dark-content"} backgroundColor={Colors.background} />
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
@@ -34,6 +43,8 @@ export default function AppNavigator() {
           contentStyle: { backgroundColor: Colors.background },
         }}
       >
+        <Stack.Screen name="SharedBasket" component={SharedBasketScreen} options={{title:"Shared basket"}} />
+        <Stack.Screen name="SavedBaskets" component={SavedBasketsScreen} options={{title:"Saved baskets"}} />
         <Stack.Screen
           name="Preferences"
           component={PreferencesScreen}

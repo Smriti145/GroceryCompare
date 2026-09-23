@@ -127,3 +127,11 @@ For a fresh database, use the API `db:migrate` script. For a database created fr
 Generate the Prisma client, run the build, and apply reviewed migrations as a separate release step. Start the compiled API with `npm run start --workspace @grocerycompare/api`; its entry point is `apps/api/dist/apps/api/src/server.js`.
 
 Before a real launch, connect authorized retailer feeds, provision managed PostgreSQL with tested backups, centralize logs and metrics, move rate limiting to shared infrastructure, configure and validate account login and administrative access, run capacity tests, and validate signed Android and iOS releases on supported devices.
+
+## Scaling infrastructure and operations
+
+Redis caching, BullMQ workers, indexed PostgreSQL search, saved/shared baskets,
+pack-size alternatives, mobile themes and the authenticated operations dashboard
+are documented in [the operations guide](docs/SCALING.md). Monitoring and CI templates
+require deployment configuration; real retailer feeds still require authorized access.
+See the [privacy policy template](docs/PRIVACY.md) before collecting production data.

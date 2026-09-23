@@ -16,3 +16,4 @@ services:
       retries: 10
 volumes:
   grocery_data:
+  # Additional services are declared in compose.ops.yaml to keep the app setup small.

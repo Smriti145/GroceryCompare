@@ -6,6 +6,7 @@ export interface Offer {
   location: string; updatedAt: string; isDemo: boolean;
 }
 export interface Product {
+  imageUrl?: string | null;
   id: string; name: string; brand: string; category: string; quantity: string;
   variants: Offer[];
 }

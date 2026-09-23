@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from './colors';
-export const featureStyles = StyleSheet.create({
+import type { Palette } from './colors';
+import { useThemeStyles } from './useTheme';
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   page: { flex: 1, backgroundColor: Colors.background },
   content: { padding: 20, paddingBottom: 48, gap: 12 },
   title: { color: Colors.primary, fontSize: 28, fontWeight: '800' },
@@ -28,3 +29,5 @@ export const featureStyles = StyleSheet.create({
   },
   bar: { backgroundColor: Colors.primary, height: 10, borderRadius: 5 },
 });
+
+export const useFeatureStyles = () => useThemeStyles(themedStyles);

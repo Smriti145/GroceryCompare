@@ -1,3 +1,4 @@
+import { cached } from '../infrastructure/redis';
 import { z } from 'zod';
 import prisma from '../config/prisma';
 import { ApiError } from '../middleware/errors';
@@ -63,16 +64,18 @@ export async function servingStores(
   location: DeliveryLocation,
   now = new Date(),
 ) {
-  const rows = await prisma.serviceArea.findMany({
+  const stored = await cached('coverage-eta', location.pincode, location, 15, () => prisma.serviceArea.findMany({
     where: {
       pincode: location.pincode,
       serving: true,
+      directory: { deletedAt: null, provider: { deletedAt: null } },
       observedAt: { lte: now },
       expiresAt: { gt: now },
     },
     orderBy: { id: 'asc' },
     take: 101,
-  });
+  }));
+  const rows = stored.map(r => ({ ...r, observedAt: new Date(r.observedAt), expiresAt: new Date(r.expiresAt) })).filter(r => r.expiresAt > now && r.observedAt <= now);
   if (rows.length > 100)
     throw new ApiError(
       503,

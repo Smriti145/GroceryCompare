@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, {useState} from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Product } from '../../models/Product';
 import PrimaryButton from '../common/PrimaryButton';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 import { formatMoney } from '../../utils/money';
 const icons: Record<string, string> = {
   Dairy: '🥛',
@@ -25,6 +26,9 @@ export default function ProductCard({
   disabled,
   count = 0,
 }: Props) {
+  const styles = useThemeStyles(themedStyles);
+  const [failedImage, setFailedImage] = useState<string | null>(null);
+
   const available = item.variants.filter(offer => offer.available);
   const minimum = available.length
     ? Math.min(...available.map(offer => offer.pricePaise))
@@ -33,9 +37,10 @@ export default function ProductCard({
     <View style={styles.card}>
       <View style={styles.row}>
         <View style={styles.art}>
+          {item.imageUrl?.startsWith('https://') && failedImage !== item.imageUrl ? <Image accessibilityLabel={item.name} source={{ uri: item.imageUrl, cache: 'force-cache' }} style={styles.image} onError={()=>setFailedImage(item.imageUrl || null)} resizeMode="contain" /> : (
           <Text style={styles.emoji} accessible={false}>
             {icons[item.category] || '🛒'}
-          </Text>
+          </Text>)}
         </View>
         <View style={styles.info}>
           <Text style={styles.category}>{item.category.toUpperCase()}</Text>
@@ -83,7 +88,8 @@ export default function ProductCard({
     </View>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
+  image:{width:60,height:64},
   card: {
     backgroundColor: Colors.card,
     padding: 16,

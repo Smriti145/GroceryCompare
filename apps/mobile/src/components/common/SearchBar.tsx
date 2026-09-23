@@ -1,14 +1,21 @@
 import React from 'react';
 import { TextInput, StyleSheet } from 'react-native';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles, useColors } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 interface Props {
+  onSubmit?: () => void;
   value: string;
   onChange: (value: string) => void;
 }
-export default function SearchBar({ value, onChange }: Props) {
+export default function SearchBar({ value, onChange, onSubmit }: Props) {
+  const styles = useThemeStyles(themedStyles);
+  const Colors = useColors();
+
   return (
     <TextInput
       accessibilityLabel="Search groceries"
+      returnKeyType="search"
+      onSubmitEditing={onSubmit}
       placeholder="Search groceries..."
       maxLength={100}
       placeholderTextColor={Colors.textSecondary}
@@ -18,7 +25,7 @@ export default function SearchBar({ value, onChange }: Props) {
     />
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   input: {
     color: Colors.textPrimary,
     backgroundColor: Colors.card,

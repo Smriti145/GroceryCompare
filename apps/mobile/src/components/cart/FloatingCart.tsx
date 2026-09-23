@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import PrimaryButton from '../common/PrimaryButton';
-import { Colors } from '../../theme/colors';
+import { useThemeStyles } from '../../theme/useTheme';
+import type { Palette } from '../../theme/colors';
 export default function FloatingCart({
   count,
   onPress,
@@ -9,6 +10,8 @@ export default function FloatingCart({
   count: number;
   onPress: () => void;
 }) {
+  const styles = useThemeStyles(themedStyles);
+
   if (!count) return null;
   return (
     <View style={styles.container}>
@@ -22,7 +25,7 @@ export default function FloatingCart({
     </View>
   );
 }
-const styles = StyleSheet.create({
+const themedStyles = (Colors: Palette) => StyleSheet.create({
   container: {
     paddingTop: 10,
     paddingBottom: 4,

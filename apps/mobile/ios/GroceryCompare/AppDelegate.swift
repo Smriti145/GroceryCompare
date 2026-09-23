@@ -5,6 +5,9 @@ import ReactAppDependencyProvider
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
+  func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+    RCTLinkingManager.application(app, open: url, options: options)
+  }
   var window: UIWindow?
 
   var reactNativeDelegate: ReactNativeDelegate?

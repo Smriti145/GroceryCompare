@@ -13,6 +13,7 @@ import {
 import { defaultPreferences } from '../../../packages/contracts/preferences';
 import { useSessionStore } from '../src/store/sessionStore';
 import api from '../src/api/axios';
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
 jest.mock('../src/api/axios', () => ({
   __esModule: true,
   default: {

@@ -1,3 +1,4 @@
+import { redisRateStore } from '../infrastructure/redis';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
@@ -22,7 +23,7 @@ export function accountRoutes(sender?: EmailSender) {
   const router = Router();
   router.use(
     rateLimit({
-      windowMs: 60000,
+      store: redisRateStore('account'), passOnStoreError: false, windowMs: 60000,
       limit: 30,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
@@ -117,7 +118,7 @@ export function accountRoutes(sender?: EmailSender) {
   });
   router.get('/export', async (_req, res) => {
     const accountId = res.locals.account.id;
-    const [sessions, watches, alerts, identities] = await Promise.all([
+    const [sessions, watches, alerts, identities, savedCarts, reports] = await Promise.all([
       prisma.deviceSession.findMany({
         where: { accountId },
         select: {
@@ -134,6 +135,8 @@ export function accountRoutes(sender?: EmailSender) {
         where: { accountId },
         select: { issuer: true, subject: true },
       }),
+      prisma.savedCart.findMany({ where: { accountId } }),
+      prisma.userReport.findMany({ where: { accountId } }),
     ]);
     res
       .attachment('grocerycompare-account.json')
@@ -142,7 +145,7 @@ export function accountRoutes(sender?: EmailSender) {
         sessions,
         watches,
         alerts,
-        identities,
+        identities, savedCarts, reports,
       });
   });
   router.delete('/me', async (req, res) => {

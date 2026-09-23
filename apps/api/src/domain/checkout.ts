@@ -67,6 +67,7 @@ export function quoteStore(
   )
     return null;
   const tariff = tariffSchema.parse(input.tariff);
+  const itemCosts: { productId: string; totalPaise: number }[] = [];
   let subtotal = 0;
   let until = Date.parse(input.store.expiresAt);
   for (const item of items) {
@@ -83,6 +84,7 @@ export function quoteStore(
       .sort((a, b) => a.pricePaise - b.pricePaise)[0];
     if (!offer) return null;
     subtotal += offer.pricePaise * item.quantity;
+    itemCosts.push({ productId: item.productId, totalPaise: offer.pricePaise * item.quantity });
     until = Math.min(until, Date.parse(offer.expiresAt));
   }
   if (!Number.isSafeInteger(subtotal) || subtotal < tariff.minimumOrderPaise)
@@ -118,6 +120,7 @@ export function quoteStore(
   if (!Number.isSafeInteger(finalPayablePaise) || finalPayablePaise < 0)
     return null;
   return {
+    itemCosts,
     store: input.store,
     items,
     validUntil: new Date(until).toISOString(),
