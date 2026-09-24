@@ -26,7 +26,11 @@ checkoutRoutes.get('/products', async (req, res) => {
     })
     .strict()
     .parse(req.query);
-  res.json({ success: true, requestId: res.locals.requestId, data: await searchCatalog(query) });
+  res.json({
+    success: true,
+    requestId: res.locals.requestId,
+    data: await searchCatalog(query),
+  });
 });
 const schema = z
   .object({
@@ -143,4 +147,14 @@ checkoutRoutes.post('/substitutions', async (req, res) => {
   );
 });
 
-checkoutRoutes.post('/packs', async (req,res) => { const b = z.object({ productId: z.string().uuid(), quantity: z.number().int().min(1).max(99), pincode: z.string().regex(/^[1-9][0-9]{5}$/) }).strict().parse(req.body); res.json(await packAlternatives(b.productId,b.quantity,b.pincode)); });
+checkoutRoutes.post('/packs', async (req, res) => {
+  const b = z
+    .object({
+      productId: z.string().uuid(),
+      quantity: z.number().int().min(1).max(99),
+      pincode: z.string().regex(/^[1-9][0-9]{5}$/),
+    })
+    .strict()
+    .parse(req.body);
+  res.json(await packAlternatives(b.productId, b.quantity, b.pincode));
+});

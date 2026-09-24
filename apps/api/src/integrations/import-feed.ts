@@ -31,11 +31,46 @@ export async function importFeed(adapter: RetailerAdapter, payload: unknown) {
           storeId: offer.storeId,
           sellerId: offer.sellerId,
         };
-        await tx.retailerStore.upsert({ where: { retailer_storeId_sellerId: { retailer: adapter.retailer, storeId: offer.storeId, sellerId: offer.sellerId } }, create: { retailer: adapter.retailer, storeId: offer.storeId, sellerId: offer.sellerId }, update: {} });
-        const listingKey = { retailer_sku: { retailer: adapter.retailer, sku: offer.sku } };
-        const listing = await tx.retailerProduct.findUnique({ where: listingKey });
-        if (listing && (listing.deletedAt || listing.canonicalId !== offer.productId)) throw new Error('Retailer listing requires reviewed canonical mapping');
-        await tx.retailerProduct.upsert({ where: listingKey, create: { retailer: adapter.retailer, sku: offer.sku, title: products.find(p => p.id === offer.productId)!.name, packSize: offer.packSize, canonicalId: offer.productId, status: 'MATCHED' }, update: {} });
+        await tx.retailerStore.upsert({
+          where: {
+            retailer_storeId_sellerId: {
+              retailer: adapter.retailer,
+              storeId: offer.storeId,
+              sellerId: offer.sellerId,
+            },
+          },
+          create: {
+            retailer: adapter.retailer,
+            storeId: offer.storeId,
+            sellerId: offer.sellerId,
+          },
+          update: {},
+        });
+        const listingKey = {
+          retailer_sku: { retailer: adapter.retailer, sku: offer.sku },
+        };
+        const listing = await tx.retailerProduct.findUnique({
+          where: listingKey,
+        });
+        if (
+          listing &&
+          (listing.deletedAt || listing.canonicalId !== offer.productId)
+        )
+          throw new Error(
+            'Retailer listing requires reviewed canonical mapping',
+          );
+        await tx.retailerProduct.upsert({
+          where: listingKey,
+          create: {
+            retailer: adapter.retailer,
+            sku: offer.sku,
+            title: products.find(p => p.id === offer.productId)!.name,
+            packSize: offer.packSize,
+            canonicalId: offer.productId,
+            status: 'MATCHED',
+          },
+          update: {},
+        });
         const where = { retailer_sku_location_storeId_sellerId: identity };
         const previous = await tx.retailerOffer.findUnique({ where });
         const observedAt = new Date(offer.observedAt);
@@ -62,7 +97,14 @@ export async function importFeed(adapter: RetailerAdapter, payload: unknown) {
         await tx.retailerOffer.upsert({ where, create: data, update: data });
         imported++;
       }
-      await tx.auditLog.create({ data: { action: 'FEED_IMPORTED', objectType: 'Retailer', objectId: adapter.retailer, reason: `${imported} current offers; ${offers.length} source observations` } });
+      await tx.auditLog.create({
+        data: {
+          action: 'FEED_IMPORTED',
+          objectType: 'Retailer',
+          objectId: adapter.retailer,
+          reason: `${imported} current offers; ${offers.length} source observations`,
+        },
+      });
       return { imported, skipped: offers.length - imported };
     },
     {

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Product } from '../../models/Product';
 import PrimaryButton from '../common/PrimaryButton';
@@ -37,10 +37,20 @@ export default function ProductCard({
     <View style={styles.card}>
       <View style={styles.row}>
         <View style={styles.art}>
-          {item.imageUrl?.startsWith('https://') && failedImage !== item.imageUrl ? <Image accessibilityLabel={item.name} source={{ uri: item.imageUrl, cache: 'force-cache' }} style={styles.image} onError={()=>setFailedImage(item.imageUrl || null)} resizeMode="contain" /> : (
-          <Text style={styles.emoji} accessible={false}>
-            {icons[item.category] || '🛒'}
-          </Text>)}
+          {item.imageUrl?.startsWith('https://') &&
+          failedImage !== item.imageUrl ? (
+            <Image
+              accessibilityLabel={item.name}
+              source={{ uri: item.imageUrl, cache: 'force-cache' }}
+              style={styles.image}
+              onError={() => setFailedImage(item.imageUrl || null)}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={styles.emoji} accessible={false}>
+              {icons[item.category] || '🛒'}
+            </Text>
+          )}
         </View>
         <View style={styles.info}>
           <Text style={styles.category}>{item.category.toUpperCase()}</Text>
@@ -88,68 +98,69 @@ export default function ProductCard({
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  image:{width:60,height:64},
-  card: {
-    backgroundColor: Colors.card,
-    padding: 16,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: 14,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  info: { flex: 1, minWidth: 110 },
-  art: {
-    width: 64,
-    height: 70,
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: { fontSize: 34 },
-  category: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    color: Colors.secondary,
-  },
-  name: {
-    color: Colors.textPrimary,
-    fontSize: 19,
-    fontWeight: '700',
-    marginVertical: 4,
-  },
-  detail: { color: Colors.textSecondary, fontSize: 12 },
-  offers: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginVertical: 16,
-  },
-  offer: {
-    flexGrow: 1,
-    backgroundColor: Colors.tint,
-    borderRadius: 10,
-    padding: 10,
-  },
-  platform: { fontSize: 10, fontWeight: '700', color: Colors.textSecondary },
-  offerPrice: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginTop: 4,
-  },
-  price: {
-    color: Colors.primary,
-    fontSize: 22,
-    fontWeight: '800',
-    marginTop: 3,
-  },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    image: { width: 60, height: 64 },
+    card: {
+      backgroundColor: Colors.card,
+      padding: 16,
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      marginBottom: 14,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flexWrap: 'wrap',
+    },
+    info: { flex: 1, minWidth: 110 },
+    art: {
+      width: 64,
+      height: 70,
+      backgroundColor: Colors.accentSoft,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emoji: { fontSize: 34 },
+    category: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+      color: Colors.secondary,
+    },
+    name: {
+      color: Colors.textPrimary,
+      fontSize: 19,
+      fontWeight: '700',
+      marginVertical: 4,
+    },
+    detail: { color: Colors.textSecondary, fontSize: 12 },
+    offers: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginVertical: 16,
+    },
+    offer: {
+      flexGrow: 1,
+      backgroundColor: Colors.tint,
+      borderRadius: 10,
+      padding: 10,
+    },
+    platform: { fontSize: 10, fontWeight: '700', color: Colors.textSecondary },
+    offerPrice: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: Colors.textPrimary,
+      marginTop: 4,
+    },
+    price: {
+      color: Colors.primary,
+      fontSize: 22,
+      fontWeight: '800',
+      marginTop: 3,
+    },
+  });

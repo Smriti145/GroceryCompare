@@ -65,16 +65,16 @@ The mobile app requires a six-digit pincode and verified, unexpired store covera
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm start` | Start React Native Metro |
-| `npm run android` | Build and launch Android |
-| `npm run ios` | Build and launch iOS |
-| `npm run api:dev` | Start the API with reloads |
-| `npm run db:setup` | Start, migrate, and seed local PostgreSQL |
-| `npm run db:refresh` | Refresh deterministic demo offers |
-| `npm run check` | Run lint, type checks, tests, and the API build |
-| `npm run test:integration` | Exercise the HTTP API against a test database |
+| Command                    | Purpose                                         |
+| -------------------------- | ----------------------------------------------- |
+| `npm start`                | Start React Native Metro                        |
+| `npm run android`          | Build and launch Android                        |
+| `npm run ios`              | Build and launch iOS                            |
+| `npm run api:dev`          | Start the API with reloads                      |
+| `npm run db:setup`         | Start, migrate, and seed local PostgreSQL       |
+| `npm run db:refresh`       | Refresh deterministic demo offers               |
+| `npm run check`            | Run lint, type checks, tests, and the API build |
+| `npm run test:integration` | Exercise the HTTP API against a test database   |
 
 Integration checks require a migrated, seeded test database. Never point them at production:
 
@@ -108,13 +108,13 @@ The authorized-feed import foundation and its current limitations are documented
 - `apps/api/prisma` contains the relational schema, migrations, and deterministic sample data.
 - `packages/contracts/index.ts` defines shared request and response types; money uses integer paise.
 
-| Endpoint | Input or behavior |
-| --- | --- |
-| `GET /health/live` | Process liveness |
-| `GET /health/ready` | Database readiness; returns 503 when unavailable |
-| `POST /api/checkout/location` | Resolves location and returns verified serving stores and local ETAs; GPS/address needs a configured geocoder |
-| `GET /api/checkout/products` | Requires `location` (a six-digit pincode); accepts `search`, `category`, UUID `cursor`, and `limit` |
-| `POST /api/checkout/compare` | Accepts `{ "location": { "pincode": "560001" }, "items": [{ "productId": "UUID", "quantity": 2 }], "maxDeliveries": 2 }`; optional `couponCode` |
+| Endpoint                      | Input or behavior                                                                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /health/live`            | Process liveness                                                                                                                                |
+| `GET /health/ready`           | Database readiness; returns 503 when unavailable                                                                                                |
+| `POST /api/checkout/location` | Resolves location and returns verified serving stores and local ETAs; GPS/address needs a configured geocoder                                   |
+| `GET /api/checkout/products`  | Requires `location` (a six-digit pincode); accepts `search`, `category`, UUID `cursor`, and `limit`                                             |
+| `POST /api/checkout/compare`  | Accepts `{ "location": { "pincode": "560001" }, "items": [{ "productId": "UUID", "quantity": 2 }], "maxDeliveries": 2 }`; optional `couponCode` |
 
 Comparisons accept 1–100 distinct products and quantities from 1–99. Plans require fresh stock, verified store coverage, equivalent packs, and a complete checkout tariff. Totals include delivery, handling, surge and small-cart fees, eligible public coupons, and minimum-order rules. The engine supports verified membership entitlements, but the public API grants none until account verification is integrated. Split plans recalculate fees for each store; bounded searches disclose when incomplete. These are tariff estimates, not reserved retailer checkout quotes. See [Checkout engine](apps/api/CHECKOUT_ENGINE.md) for matching, imports, and rollout limits. Legacy `/api/products` and `/api/compare` endpoints are available only outside production.
 

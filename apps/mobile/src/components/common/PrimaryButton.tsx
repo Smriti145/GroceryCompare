@@ -40,19 +40,20 @@ export default function PrimaryButton({
     </TouchableOpacity>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  button: {
-    backgroundColor: Colors.primary,
-    padding: 14,
-    minWidth: 48,
-    minHeight: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 4,
-  },
-  secondary: { backgroundColor: Colors.accent },
-  secondaryText: { color: Colors.onAccent },
-  disabled: { opacity: 0.5 },
-  text: { color: Colors.onPrimary, fontWeight: '700', fontSize: 15 },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    button: {
+      backgroundColor: Colors.primary,
+      padding: 14,
+      minWidth: 48,
+      minHeight: 48,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 4,
+    },
+    secondary: { backgroundColor: Colors.accent },
+    secondaryText: { color: Colors.onAccent },
+    disabled: { opacity: 0.5 },
+    text: { color: Colors.onPrimary, fontWeight: '700', fontSize: 15 },
+  });

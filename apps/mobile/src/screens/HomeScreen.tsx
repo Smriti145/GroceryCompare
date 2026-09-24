@@ -1,4 +1,4 @@
-import {useQuery} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import ProductSkeleton from '../components/common/ProductSkeleton';
 import { useSearchHistory } from '../store/searchHistory';
 import React, { useEffect, useState } from 'react';
@@ -36,9 +36,21 @@ export default function HomeScreen({
   const Colors = useColors();
 
   const insets = useSafeAreaInsets();
-  const recent = useSearchHistory(s => s.recent), remember = useSearchHistory(s => s.remember);
+  const recent = useSearchHistory(s => s.recent),
+    remember = useSearchHistory(s => s.remember);
   const location = useAppStore(s => s.location);
-  const popular = useQuery({queryKey:['popular-searches',location],enabled:/^[1-9][0-9]{5}$/.test(location),staleTime:60000,queryFn:async({signal})=>(await api.get<{term:string}[]>('/search/popular',{params:{pincode:location},signal})).data});
+  const popular = useQuery({
+    queryKey: ['popular-searches', location],
+    enabled: /^[1-9][0-9]{5}$/.test(location),
+    staleTime: 60000,
+    queryFn: async ({ signal }) =>
+      (
+        await api.get<{ term: string }[]>('/search/popular', {
+          params: { pincode: location },
+          signal,
+        })
+      ).data,
+  });
   const setLocation = useAppStore(s => s.setLocation);
   const [area, setArea] = useState(location);
   const [coverageMessage, setCoverageMessage] = useState(
@@ -92,7 +104,19 @@ export default function HomeScreen({
         variant="secondary"
         onPress={() => navigation.navigate('Account')}
       />
-      {!search && popular.data?.length ? <View><Text style={styles.description}>Popular near you</Text>{popular.data.slice(0,5).map(p=><PrimaryButton key={p.term} title={p.term} variant="secondary" onPress={()=>setSearch(p.term)} />)}</View> : null}
+      {!search && popular.data?.length ? (
+        <View>
+          <Text style={styles.description}>Popular near you</Text>
+          {popular.data.slice(0, 5).map(p => (
+            <PrimaryButton
+              key={p.term}
+              title={p.term}
+              variant="secondary"
+              onPress={() => setSearch(p.term)}
+            />
+          ))}
+        </View>
+      ) : null}
       <Text style={styles.eyebrow}>A LITTLE COMPARISON. MORE SAVINGS.</Text>
       <Text style={styles.heading}>Your groceries.{'\n'}A better price.</Text>
       <Text style={styles.description}>
@@ -126,8 +150,24 @@ export default function HomeScreen({
         </View>
         <Text style={styles.hint}>{coverageMessage}</Text>
       </View>
-      <SearchBar value={search} onChange={setSearch} onSubmit={() => { remember(location, search); void api.post('/search/event', { pincode: location, term: search }).catch(() => {}); }} />
-      {(recent[location] || []).slice(0,5).map(term => <PrimaryButton key={term} title={`Recent: ${term}`} variant="secondary" onPress={() => setSearch(term)} />)}
+      <SearchBar
+        value={search}
+        onChange={setSearch}
+        onSubmit={() => {
+          remember(location, search);
+          void api
+            .post('/search/event', { pincode: location, term: search })
+            .catch(() => {});
+        }}
+      />
+      {(recent[location] || []).slice(0, 5).map(term => (
+        <PrimaryButton
+          key={term}
+          title={`Recent: ${term}`}
+          variant="secondary"
+          onPress={() => setSearch(term)}
+        />
+      ))}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -185,7 +225,14 @@ export default function HomeScreen({
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={header}
           onEndReachedThreshold={0.5}
-          onEndReached={() => { if (products.hasNextPage && !products.isFetching && !products.isError) void products.fetchNextPage(); }}
+          onEndReached={() => {
+            if (
+              products.hasNextPage &&
+              !products.isFetching &&
+              !products.isError
+            )
+              void products.fetchNextPage();
+          }}
           renderItem={({ item }) => (
             <ProductCard
               onInsights={() =>
@@ -198,7 +245,16 @@ export default function HomeScreen({
               count={
                 cart.find(line => line.product.id === item.id)?.quantity || 0
               }
-              onAdd={() => { addToCart(item); void api.post('/search/event',{pincode:location,term:item.name.slice(0,40),productId:item.id}).catch(()=>{}); }}
+              onAdd={() => {
+                addToCart(item);
+                void api
+                  .post('/search/event', {
+                    pincode: location,
+                    term: item.name.slice(0, 40),
+                    productId: item.id,
+                  })
+                  .catch(() => {});
+              }}
               disabled={
                 !hydrated ||
                 (cart.length >= 100 &&
@@ -268,89 +324,90 @@ export default function HomeScreen({
     </KeyboardAvoidingView>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  flex: { flex: 1 },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    backgroundColor: Colors.background,
-  },
-  eyebrow: {
-    color: Colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.4,
-    marginTop: 18,
-  },
-  heading: {
-    fontSize: 36,
-    lineHeight: 42,
-    fontWeight: '800',
-    letterSpacing: -1.3,
-    color: Colors.textPrimary,
-    marginTop: 12,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: Colors.textSecondary,
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  location: {
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 18,
-    padding: 14,
-    borderLeftWidth: 5,
-    borderLeftColor: Colors.secondary,
-  },
-  locationLabel: {
-    fontSize: 10,
-    letterSpacing: 1,
-    color: Colors.primary,
-    fontWeight: '800',
-  },
-  hint: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  area: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  input: {
-    flex: 1,
-    minHeight: 48,
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-    paddingHorizontal: 2,
-  },
-  categories: { gap: 8, paddingVertical: 6 },
-  chip: {
-    minHeight: 44,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    justifyContent: 'center',
-  },
-  activeChip: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
-  chipText: { color: Colors.textSecondary, fontWeight: '600' },
-  activeText: { color: Colors.onPrimary },
-  section: {
-    color: Colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '700',
-    marginTop: 20,
-    marginBottom: 8,
-  },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    container: {
+      flex: 1,
+      paddingHorizontal: 20,
+      backgroundColor: Colors.background,
+    },
+    eyebrow: {
+      color: Colors.primary,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.4,
+      marginTop: 18,
+    },
+    heading: {
+      fontSize: 36,
+      lineHeight: 42,
+      fontWeight: '800',
+      letterSpacing: -1.3,
+      color: Colors.textPrimary,
+      marginTop: 12,
+    },
+    description: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: Colors.textSecondary,
+      marginTop: 12,
+      marginBottom: 20,
+    },
+    location: {
+      backgroundColor: Colors.accentSoft,
+      borderRadius: 18,
+      padding: 14,
+      borderLeftWidth: 5,
+      borderLeftColor: Colors.secondary,
+    },
+    locationLabel: {
+      fontSize: 10,
+      letterSpacing: 1,
+      color: Colors.primary,
+      fontWeight: '800',
+    },
+    hint: {
+      color: Colors.textSecondary,
+      fontSize: 12,
+      lineHeight: 18,
+      marginBottom: 12,
+    },
+    area: {
+      flexDirection: 'row',
+      gap: 8,
+      alignItems: 'center',
+      marginVertical: 4,
+    },
+    input: {
+      flex: 1,
+      minHeight: 48,
+      color: Colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+      paddingHorizontal: 2,
+    },
+    categories: { gap: 8, paddingVertical: 6 },
+    chip: {
+      minHeight: 44,
+      paddingHorizontal: 18,
+      borderRadius: 24,
+      backgroundColor: Colors.card,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      justifyContent: 'center',
+    },
+    activeChip: {
+      backgroundColor: Colors.secondary,
+      borderColor: Colors.secondary,
+    },
+    chipText: { color: Colors.textSecondary, fontWeight: '600' },
+    activeText: { color: Colors.onPrimary },
+    section: {
+      color: Colors.textPrimary,
+      fontSize: 22,
+      fontWeight: '700',
+      marginTop: 20,
+      marginBottom: 8,
+    },
+  });

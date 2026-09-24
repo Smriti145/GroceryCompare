@@ -43,11 +43,21 @@ export async function checkout(
     })),
   };
   const offers = stores.length
-    ? await cached('retailer-offers', location.pincode, { items: items.map(i => i.productId).sort(), stores: stores.map(s => s.id) }, 10, () => prisma.retailerOffer.findMany({
-        where: offerFilter,
-        include: { product: true },
-        take: 10001,
-      }))
+    ? await cached(
+        'retailer-offers',
+        location.pincode,
+        {
+          items: items.map(i => i.productId).sort(),
+          stores: stores.map(s => s.id),
+        },
+        10,
+        () =>
+          prisma.retailerOffer.findMany({
+            where: offerFilter,
+            include: { product: true },
+            take: 10001,
+          }),
+      )
     : [];
   if (offers.length > 10000) throw new Error('Offer query exceeded capacity');
   for (const row of stores) {
@@ -97,7 +107,18 @@ export async function checkout(
     preferences,
   );
   result.explanation = explain(result, preferences.mode);
-  const baseline = new Map(result.bestSingle?.deliveries.flatMap(d => d.itemCosts || []).map(i => [i.productId, i.totalPaise]));
-  result.itemSavings = result.recommended?.deliveries.flatMap(d => d.itemCosts || []).filter(i => baseline.has(i.productId)).map(i => ({ productId: i.productId, savingsPaise: baseline.get(i.productId)! - i.totalPaise })) || [];
+  const baseline = new Map(
+    result.bestSingle?.deliveries
+      .flatMap(d => d.itemCosts || [])
+      .map(i => [i.productId, i.totalPaise]),
+  );
+  result.itemSavings =
+    result.recommended?.deliveries
+      .flatMap(d => d.itemCosts || [])
+      .filter(i => baseline.has(i.productId))
+      .map(i => ({
+        productId: i.productId,
+        savingsPaise: baseline.get(i.productId)! - i.totalPaise,
+      })) || [];
   return result;
 }

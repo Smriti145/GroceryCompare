@@ -4,24 +4,24 @@ groups:
       - alert: GroceryUnavailable
         expr: probe_success{job="readiness"} == 0
         for: 2m
-        labels: {severity: critical}
-        annotations: {summary: 'Grocery API readiness failed'}
+        labels: { severity: critical }
+        annotations: { summary: 'Grocery API readiness failed' }
       - alert: GroceryScrapeUnavailable
         expr: up{job=~"grocery-api|grocery-worker|readiness"} == 0
         for: 2m
-        labels: {severity: critical}
-        annotations: {summary: 'Monitoring target unavailable'}
+        labels: { severity: critical }
+        annotations: { summary: 'Monitoring target unavailable' }
       - alert: GroceryErrorRate
         expr: sum(rate(gc_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(gc_http_requests_total[5m])), 0.01) > 0.05
         for: 5m
-        labels: {severity: warning}
-        annotations: {summary: 'API 5xx rate exceeds 5 percent'}
+        labels: { severity: warning }
+        annotations: { summary: 'API 5xx rate exceeds 5 percent' }
       - alert: GrocerySlowAPI
         expr: histogram_quantile(0.95, sum by (le) (rate(gc_http_duration_seconds_bucket[5m]))) > 1
         for: 10m
-        labels: {severity: warning}
-        annotations: {summary: 'API p95 latency exceeds one second'}
+        labels: { severity: warning }
+        annotations: { summary: 'API p95 latency exceeds one second' }
       - alert: GroceryJobFailures
         expr: sum(increase(gc_jobs_total{status="failed"}[10m])) > 5
-        labels: {severity: warning}
-        annotations: {summary: 'Repeated background job failures'}
+        labels: { severity: warning }
+        annotations: { summary: 'Repeated background job failures' }

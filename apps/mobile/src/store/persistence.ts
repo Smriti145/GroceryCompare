@@ -14,6 +14,10 @@ function product(value: unknown): value is Product {
     ['name', 'brand', 'category', 'quantity'].every(
       key => typeof value[key] === 'string',
     ) &&
+    (value.imageUrl === undefined ||
+      value.imageUrl === null ||
+      (typeof value.imageUrl === 'string' &&
+        value.imageUrl.startsWith('https://'))) &&
     Array.isArray(value.variants) &&
     value.variants.every(
       offer =>

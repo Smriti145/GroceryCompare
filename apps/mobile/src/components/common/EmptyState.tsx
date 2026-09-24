@@ -24,7 +24,8 @@ export default function EmptyState({
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  container: { padding: 20, gap: 12 },
-  text: { color: Colors.textSecondary, fontSize: 16 },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    container: { padding: 20, gap: 12 },
+    text: { color: Colors.textSecondary, fontSize: 16 },
+  });

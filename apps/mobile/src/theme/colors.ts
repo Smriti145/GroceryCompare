@@ -19,8 +19,21 @@ export const Colors = {
 };
 export type Palette = typeof Colors;
 export const DarkColors: Palette = {
-  ...Colors, background: '#171020', card: '#251A31', primary: '#C49AFF', secondary: '#FF8499',
-  accent: '#F4C430', textPrimary: '#F6ECFF', textSecondary: '#CABCD4', border: '#493454',
-  blinkit: '#F4C430', zepto: '#C49AFF', swiggy: '#FF8499', danger: '#FF8499', success: '#C49AFF',
-  tint: '#382446', accentSoft: '#493B19', onPrimary: '#20102F',
+  ...Colors,
+  background: '#171020',
+  card: '#251A31',
+  primary: '#C49AFF',
+  secondary: '#FF8499',
+  accent: '#F4C430',
+  textPrimary: '#F6ECFF',
+  textSecondary: '#CABCD4',
+  border: '#493454',
+  blinkit: '#F4C430',
+  zepto: '#C49AFF',
+  swiggy: '#FF8499',
+  danger: '#FF8499',
+  success: '#C49AFF',
+  tint: '#382446',
+  accentSoft: '#493B19',
+  onPrimary: '#20102F',
 };

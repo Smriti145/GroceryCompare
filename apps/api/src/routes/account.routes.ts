@@ -23,7 +23,9 @@ export function accountRoutes(sender?: EmailSender) {
   const router = Router();
   router.use(
     rateLimit({
-      store: redisRateStore('account'), passOnStoreError: false, windowMs: 60000,
+      store: redisRateStore('account'),
+      passOnStoreError: false,
+      windowMs: 60000,
       limit: 30,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
@@ -118,35 +120,36 @@ export function accountRoutes(sender?: EmailSender) {
   });
   router.get('/export', async (_req, res) => {
     const accountId = res.locals.account.id;
-    const [sessions, watches, alerts, identities, savedCarts, reports] = await Promise.all([
-      prisma.deviceSession.findMany({
-        where: { accountId },
-        select: {
-          id: true,
-          deviceName: true,
-          createdAt: true,
-          expiresAt: true,
-          revokedAt: true,
-        },
-      }),
-      prisma.watch.findMany({ where: { accountId } }),
-      prisma.alert.findMany({ where: { accountId } }),
-      prisma.socialIdentity.findMany({
-        where: { accountId },
-        select: { issuer: true, subject: true },
-      }),
-      prisma.savedCart.findMany({ where: { accountId } }),
-      prisma.userReport.findMany({ where: { accountId } }),
-    ]);
-    res
-      .attachment('grocerycompare-account.json')
-      .json({
-        account: res.locals.account,
-        sessions,
-        watches,
-        alerts,
-        identities, savedCarts, reports,
-      });
+    const [sessions, watches, alerts, identities, savedCarts, reports] =
+      await Promise.all([
+        prisma.deviceSession.findMany({
+          where: { accountId },
+          select: {
+            id: true,
+            deviceName: true,
+            createdAt: true,
+            expiresAt: true,
+            revokedAt: true,
+          },
+        }),
+        prisma.watch.findMany({ where: { accountId } }),
+        prisma.alert.findMany({ where: { accountId } }),
+        prisma.socialIdentity.findMany({
+          where: { accountId },
+          select: { issuer: true, subject: true },
+        }),
+        prisma.savedCart.findMany({ where: { accountId } }),
+        prisma.userReport.findMany({ where: { accountId } }),
+      ]);
+    res.attachment('grocerycompare-account.json').json({
+      account: res.locals.account,
+      sessions,
+      watches,
+      alerts,
+      identities,
+      savedCarts,
+      reports,
+    });
   });
   router.delete('/me', async (req, res) => {
     z.object({ confirmation: z.literal('DELETE') })

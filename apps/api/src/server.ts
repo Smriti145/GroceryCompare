@@ -20,7 +20,12 @@ async function main() {
     }, 10_000);
     deadline.unref();
     server.close(() => {
-      void Promise.all([prisma.$disconnect(), queue?.close(), redis?.quit(), telemetry?.shutdown()]).then(() => {
+      void Promise.all([
+        prisma.$disconnect(),
+        queue?.close(),
+        redis?.quit(),
+        telemetry?.shutdown(),
+      ]).then(() => {
         clearTimeout(deadline);
         process.exit(0);
       });

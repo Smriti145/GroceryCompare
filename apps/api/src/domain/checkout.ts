@@ -84,7 +84,10 @@ export function quoteStore(
       .sort((a, b) => a.pricePaise - b.pricePaise)[0];
     if (!offer) return null;
     subtotal += offer.pricePaise * item.quantity;
-    itemCosts.push({ productId: item.productId, totalPaise: offer.pricePaise * item.quantity });
+    itemCosts.push({
+      productId: item.productId,
+      totalPaise: offer.pricePaise * item.quantity,
+    });
     until = Math.min(until, Date.parse(offer.expiresAt));
   }
   if (!Number.isSafeInteger(subtotal) || subtotal < tariff.minimumOrderPaise)

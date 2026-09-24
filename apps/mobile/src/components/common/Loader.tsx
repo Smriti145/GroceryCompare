@@ -16,11 +16,12 @@ export default function Loader() {
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-  },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 24,
+      justifyContent: 'center',
+      backgroundColor: Colors.background,
+    },
+  });

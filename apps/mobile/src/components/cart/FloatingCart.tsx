@@ -25,18 +25,19 @@ export default function FloatingCart({
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  container: {
-    paddingTop: 10,
-    paddingBottom: 4,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-  },
-  title: { color: Colors.textPrimary, fontWeight: '700', fontSize: 14 },
-  subtitle: { color: Colors.textSecondary, fontSize: 11, marginTop: 4 },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      paddingTop: 10,
+      paddingBottom: 4,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+    },
+    title: { color: Colors.textPrimary, fontWeight: '700', fontSize: 14 },
+    subtitle: { color: Colors.textSecondary, fontSize: 11, marginTop: 4 },
+  });

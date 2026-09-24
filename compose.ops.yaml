@@ -1,7 +1,16 @@
 services:
   redis:
     image: redis:7.4-alpine
-    command: [redis-server, --appendonly, 'yes', --maxmemory, 256mb, --maxmemory-policy, noeviction]
+    command:
+      [
+        redis-server,
+        --appendonly,
+        'yes',
+        --maxmemory,
+        256mb,
+        --maxmemory-policy,
+        noeviction,
+      ]
     ports: ['127.0.0.1:6379:6379']
     volumes: [redis_data:/data]
     healthcheck:
@@ -22,11 +31,15 @@ services:
     image: prom/blackbox-exporter:v0.27.0
     profiles: [monitoring]
     extra_hosts: ['host.docker.internal:host-gateway']
-    volumes: ['./ops/monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml:ro']
+    volumes:
+      ['./ops/monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml:ro']
   alertmanager:
     image: prom/alertmanager:v0.28.1
     profiles: [monitoring]
-    volumes: ['./ops/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro']
+    volumes:
+      [
+        './ops/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro',
+      ]
     ports: ['127.0.0.1:9093:9093']
   grafana:
     image: grafana/grafana:12.1.1

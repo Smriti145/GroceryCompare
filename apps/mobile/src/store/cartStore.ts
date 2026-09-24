@@ -12,7 +12,11 @@ interface CartState {
   setQuantity: (id: string, quantity: number) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
-  replaceEquivalent: (originalId: string, product: Product, quantity: number) => boolean;
+  replaceEquivalent: (
+    originalId: string,
+    product: Product,
+    quantity: number,
+  ) => boolean;
   loadCart: (items: CartItem[]) => void;
   replaceProduct: (originalId: string, product: Product) => boolean;
   finishHydration: (error?: unknown) => void;
@@ -78,16 +82,26 @@ export const useCartStore = create<CartState>()(
         });
         return changed;
       },
-      loadCart: items => set({cart: restoreCart({cart:items})}),
+      loadCart: items => set({ cart: restoreCart({ cart: items }) }),
       replaceEquivalent: (originalId, product, quantity) => {
         let changed = false;
         set(state => {
-          const target = state.cart.find(i => i.product.id === product.id && i.product.id !== originalId);
+          const target = state.cart.find(
+            i => i.product.id === product.id && i.product.id !== originalId,
+          );
           const total = quantity + (target?.quantity ?? 0);
-          const others = state.cart.filter(i => i.product.id !== originalId && i.product.id !== product.id);
-          if (!Number.isInteger(total) || total < 1 || total > 99 || others.length >= 100) return state;
+          const others = state.cart.filter(
+            i => i.product.id !== originalId && i.product.id !== product.id,
+          );
+          if (
+            !Number.isInteger(total) ||
+            total < 1 ||
+            total > 99 ||
+            others.length >= 100
+          )
+            return state;
           changed = true;
-          return {cart:[...others, {product, quantity:total}]};
+          return { cart: [...others, { product, quantity: total }] };
         });
         return changed;
       },

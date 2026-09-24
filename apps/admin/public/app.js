@@ -1,15 +1,204 @@
 'use strict';
-let access='',refresh='',challenge='',sessionId='';
-const el=id=>document.getElementById(id);
-const status=(text,error=false)=>{el('status').textContent=text;el('status').className=error?'error':'';};
-async function api(path,method='GET',body,retry=true){const r=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json',...(access?{Authorization:'Bearer '+access}:{})},...(body?{body:JSON.stringify(body)}:{})});if(r.status===401&&refresh&&retry){const tokens=await api('/account/refresh','POST',{refreshToken:refresh},false);access=tokens.accessToken;refresh=tokens.refreshToken;return api(path,method,body,false);}if(!r.ok){let data;try{data=await r.json();}catch{}throw new Error(data?.error?.message||'Request failed ('+r.status+')');}return r.status===204?null:r.json();}
-async function run(fn){const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{await fn();}catch(e){status(e.message,true);}finally{buttons.forEach(b=>b.disabled=false);}}
-function rows(id,items,render){el(id).replaceChildren();if(!items.length){el(id).textContent='Nothing needs attention here.';return;}items.forEach(item=>{const row=document.createElement('div');row.className='row';render(row,item);el(id).append(row);});}
-function text(parent,value,tag='span'){const node=document.createElement(tag);node.textContent=value;parent.append(node);return node;}
-async function load(){const d=await api('/admin/overview');el('dashboard').hidden=false;el('login').hidden=true;el('logout').hidden=false;el('stats').replaceChildren();[['Catalog products',d.products],['Stale offers',d.stale],['Missing images',d.missingImages],['Alerts / 24h',d.alertsLast24h]].forEach(([name,value])=>{const c=document.createElement('div');c.className='stat';text(c,String(value),'strong');text(c,name);el('stats').append(c);});rows('provider-list',d.providers,(r,p)=>{text(r,p.retailer,'strong');const label=text(r,!p.configured?'Not configured':!p.metrics?'Awaiting health data':p.metrics.consecutiveFailures?'Degraded':'Healthy');label.className='badge';text(r,p.checkedAt?'Checked '+new Date(p.checkedAt).toLocaleString():'No observations');});rows('unmatched',d.unmatched,(r,p)=>{text(r,p.retailer+' · '+p.sku+' · '+p.title);text(r,p.status);});rows('report-list',d.reports,(r,p)=>{text(r,p.message);const b=text(r,'Resolve','button');b.onclick=()=>run(async()=>{const reason=prompt('Resolution reason (at least 5 characters)');if(!reason)return;await api('/admin/reports/'+p.id,'PATCH',{status:'RESOLVED',reason});await load();});});rows('audit-list',d.audit,(r,p)=>{text(r,p.action+' · '+p.objectType);text(r,p.reason);text(r,new Date(p.createdAt).toLocaleString());});el('metrics').textContent=JSON.stringify({jobs:d.jobCounts,http:d.metrics},null,2);status('Updated '+new Date().toLocaleTimeString());}
-el('email-form').onsubmit=e=>{e.preventDefault();run(async()=>{const r=await api('/account/otp','POST',{email:el('email').value});challenge=r.challengeId;el('code-form').hidden=false;status('Check your email for the code.');});};
-el('code-form').onsubmit=e=>{e.preventDefault();run(async()=>{const r=await api('/account/verify','POST',{challengeId:challenge,code:el('code').value,deviceName:'Operations dashboard'});access=r.accessToken;refresh=r.refreshToken;sessionId=r.sessionId;el('code').value='';await load();});};
-el('refresh').onclick=()=>run(load);
-el('logout').onclick=()=>run(async()=>{if(sessionId)await api('/account/sessions/'+sessionId,'DELETE');access='';refresh='';location.reload();});
-el('mapping-form').onsubmit=e=>{e.preventDefault();run(async()=>{await api('/admin/mapping','POST',{listing:JSON.parse(el('listing').value),productId:el('canonical').value,reason:el('reason').value});await load();});};
-el('product-form').onsubmit=e=>{e.preventDefault();run(async()=>{const imageUrl=el('image-url').value;await api('/admin/products/'+el('product-id').value,'PATCH',{dietaryTags:el('tags').value.split(',').map(v=>v.trim()).filter(Boolean),deleted:el('archive').checked,reason:el('product-reason').value,...(imageUrl?{imageUrl}:{})});await load();});};
+let access = '',
+  refresh = '',
+  challenge = '',
+  sessionId = '';
+const el = id => document.getElementById(id);
+const status = (text, error = false) => {
+  el('status').textContent = text;
+  el('status').className = error ? 'error' : '';
+};
+async function api(path, method = 'GET', body, retry = true) {
+  const r = await fetch('/api' + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(access ? { Authorization: 'Bearer ' + access } : {}),
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  if (r.status === 401 && refresh && retry) {
+    const tokens = await api(
+      '/account/refresh',
+      'POST',
+      { refreshToken: refresh },
+      false,
+    );
+    access = tokens.accessToken;
+    refresh = tokens.refreshToken;
+    return api(path, method, body, false);
+  }
+  if (!r.ok) {
+    let data;
+    try {
+      data = await r.json();
+    } catch {}
+    throw new Error(
+      data?.error?.message || 'Request failed (' + r.status + ')',
+    );
+  }
+  return r.status === 204 ? null : r.json();
+}
+async function run(fn) {
+  const buttons = [...document.querySelectorAll('button')];
+  buttons.forEach(b => (b.disabled = true));
+  try {
+    await fn();
+  } catch (e) {
+    status(e.message, true);
+  } finally {
+    buttons.forEach(b => (b.disabled = false));
+  }
+}
+function rows(id, items, render) {
+  el(id).replaceChildren();
+  if (!items.length) {
+    el(id).textContent = 'Nothing needs attention here.';
+    return;
+  }
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    render(row, item);
+    el(id).append(row);
+  });
+}
+function text(parent, value, tag = 'span') {
+  const node = document.createElement(tag);
+  node.textContent = value;
+  parent.append(node);
+  return node;
+}
+async function load() {
+  const d = await api('/admin/overview');
+  el('dashboard').hidden = false;
+  el('login').hidden = true;
+  el('logout').hidden = false;
+  el('stats').replaceChildren();
+  [
+    ['Catalog products', d.products],
+    ['Stale offers', d.stale],
+    ['Missing images', d.missingImages],
+    ['Alerts / 24h', d.alertsLast24h],
+  ].forEach(([name, value]) => {
+    const c = document.createElement('div');
+    c.className = 'stat';
+    text(c, String(value), 'strong');
+    text(c, name);
+    el('stats').append(c);
+  });
+  rows('provider-list', d.providers, (r, p) => {
+    text(r, p.retailer, 'strong');
+    const label = text(
+      r,
+      !p.configured
+        ? 'Not configured'
+        : !p.metrics
+        ? 'Awaiting health data'
+        : p.metrics.consecutiveFailures
+        ? 'Degraded'
+        : 'Healthy',
+    );
+    label.className = 'badge';
+    text(
+      r,
+      p.checkedAt
+        ? 'Checked ' + new Date(p.checkedAt).toLocaleString()
+        : 'No observations',
+    );
+  });
+  rows('unmatched', d.unmatched, (r, p) => {
+    text(r, p.retailer + ' · ' + p.sku + ' · ' + p.title);
+    text(r, p.status);
+  });
+  rows('report-list', d.reports, (r, p) => {
+    text(r, p.message);
+    const b = text(r, 'Resolve', 'button');
+    b.onclick = () =>
+      run(async () => {
+        const reason = prompt('Resolution reason (at least 5 characters)');
+        if (!reason) return;
+        await api('/admin/reports/' + p.id, 'PATCH', {
+          status: 'RESOLVED',
+          reason,
+        });
+        await load();
+      });
+  });
+  rows('audit-list', d.audit, (r, p) => {
+    text(r, p.action + ' · ' + p.objectType);
+    text(r, p.reason);
+    text(r, new Date(p.createdAt).toLocaleString());
+  });
+  el('metrics').textContent = JSON.stringify(
+    { jobs: d.jobCounts, http: d.metrics },
+    null,
+    2,
+  );
+  status('Updated ' + new Date().toLocaleTimeString());
+}
+el('email-form').onsubmit = e => {
+  e.preventDefault();
+  run(async () => {
+    const r = await api('/account/otp', 'POST', { email: el('email').value });
+    challenge = r.challengeId;
+    el('code-form').hidden = false;
+    status('Check your email for the code.');
+  });
+};
+el('code-form').onsubmit = e => {
+  e.preventDefault();
+  run(async () => {
+    const r = await api('/account/verify', 'POST', {
+      challengeId: challenge,
+      code: el('code').value,
+      deviceName: 'Operations dashboard',
+    });
+    access = r.accessToken;
+    refresh = r.refreshToken;
+    sessionId = r.sessionId;
+    el('code').value = '';
+    await load();
+  });
+};
+el('refresh').onclick = () => run(load);
+el('logout').onclick = () =>
+  run(async () => {
+    if (sessionId) await api('/account/sessions/' + sessionId, 'DELETE');
+    access = '';
+    refresh = '';
+    location.reload();
+  });
+el('mapping-form').onsubmit = e => {
+  e.preventDefault();
+  run(async () => {
+    await api('/admin/mapping', 'POST', {
+      listing: JSON.parse(el('listing').value),
+      productId: el('canonical').value,
+      reason: el('reason').value,
+    });
+    await load();
+  });
+};
+el('product-form').onsubmit = e => {
+  e.preventDefault();
+  run(async () => {
+    const imageUrl = el('image-url').value;
+    await api('/admin/products/' + el('product-id').value, 'PATCH', {
+      ...(el('tags').value.trim()
+        ? {
+            dietaryTags: el('tags')
+              .value.split(',')
+              .map(v => v.trim())
+              .filter(Boolean),
+          }
+        : {}),
+      ...(el('archive').value
+        ? { deleted: el('archive').value === 'true' }
+        : {}),
+      reason: el('product-reason').value,
+      ...(imageUrl ? { imageUrl } : {}),
+    });
+    await load();
+  });
+};

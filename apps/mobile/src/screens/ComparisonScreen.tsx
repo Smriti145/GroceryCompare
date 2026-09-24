@@ -121,7 +121,9 @@ export default function ComparisonScreen() {
         Ranking: {preferences.mode.toLowerCase()}. ETA is when the last delivery
         arrives.
       </Text>
-      {result.explanation ? <Text style={styles.text}>{result.explanation}</Text> : null}
+      {result.explanation ? (
+        <Text style={styles.text}>{result.explanation}</Text>
+      ) : null}
       {result.recommended ? (
         <PlanCard
           title="Recommended for you"
@@ -178,8 +180,20 @@ export default function ComparisonScreen() {
       {result.bestSplit ? (
         <PlanCard title="Split basket" plan={result.bestSplit} names={names} />
       ) : null}
-      {result.itemSavings?.some(i=>i.savingsPaise!==0) ? <Text style={styles.heading}>Item savings versus the best single store (before fees)</Text> : null}
-      {result.itemSavings?.filter(i=>i.savingsPaise!==0).map(i=><Text key={i.productId} style={styles.text}>{names.get(i.productId)}: {i.savingsPaise>=0?'save':'costs extra'} {formatMoney(Math.abs(i.savingsPaise))}</Text>)}
+      {result.itemSavings?.some(i => i.savingsPaise !== 0) ? (
+        <Text style={styles.heading}>
+          Item savings versus the best single store (before fees)
+        </Text>
+      ) : null}
+      {result.itemSavings
+        ?.filter(i => i.savingsPaise !== 0)
+        .map(i => (
+          <Text key={i.productId} style={styles.text}>
+            {names.get(i.productId)}:{' '}
+            {i.savingsPaise >= 0 ? 'save' : 'costs extra'}{' '}
+            {formatMoney(Math.abs(i.savingsPaise))}
+          </Text>
+        ))}
       {result.savingsPaise > 0 ? (
         <Text style={styles.heading}>
           Save {formatMoney(result.savingsPaise)} with{' '}
@@ -208,36 +222,42 @@ export default function ComparisonScreen() {
     </ScrollView>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  options: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  coupon: {
-    minHeight: 48,
-    color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  content: { padding: 16 },
-  container: { flex: 1, backgroundColor: Colors.background },
-  card: {
-    backgroundColor: Colors.card,
-    padding: 16,
-    borderRadius: 18,
-    marginVertical: 12,
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.primary,
-    marginBottom: 8,
-  },
-  text: { color: Colors.textSecondary, marginBottom: 6, lineHeight: 21 },
-  delivery: {
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-    paddingTop: 12,
-    marginTop: 12,
-  },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    options: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 12,
+    },
+    coupon: {
+      minHeight: 48,
+      color: Colors.textPrimary,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      marginBottom: 8,
+    },
+    content: { padding: 16 },
+    container: { flex: 1, backgroundColor: Colors.background },
+    card: {
+      backgroundColor: Colors.card,
+      padding: 16,
+      borderRadius: 18,
+      marginVertical: 12,
+    },
+    heading: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: Colors.primary,
+      marginBottom: 8,
+    },
+    text: { color: Colors.textSecondary, marginBottom: 6, lineHeight: 21 },
+    delivery: {
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+      paddingTop: 12,
+      marginTop: 12,
+    },
+  });

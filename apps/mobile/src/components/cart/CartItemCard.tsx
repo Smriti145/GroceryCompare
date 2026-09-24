@@ -53,33 +53,34 @@ export default function CartItemCard({ item, onQuantity, onRemove }: Props) {
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 18,
-    borderRadius: 20,
-    marginBottom: 12,
-  },
-  name: { color: Colors.textPrimary, fontWeight: '700', fontSize: 18 },
-  detail: { color: Colors.textSecondary, marginTop: 6 },
-  quantity: {
-    color: Colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    minWidth: 28,
-    textAlign: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 12,
-  },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  remove: { minHeight: 48, justifyContent: 'center', padding: 8 },
-  removeText: { color: Colors.danger, fontWeight: '600' },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: Colors.card,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      padding: 18,
+      borderRadius: 20,
+      marginBottom: 12,
+    },
+    name: { color: Colors.textPrimary, fontWeight: '700', fontSize: 18 },
+    detail: { color: Colors.textSecondary, marginTop: 6 },
+    quantity: {
+      color: Colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+      minWidth: 28,
+      textAlign: 'center',
+    },
+    row: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginTop: 12,
+    },
+    stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    remove: { minHeight: 48, justifyContent: 'center', padding: 8 },
+    removeText: { color: Colors.danger, fontWeight: '600' },
+  });

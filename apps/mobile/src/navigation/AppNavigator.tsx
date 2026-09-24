@@ -19,7 +19,10 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer
-      linking={{ prefixes: ['grocerycompare://'], config: { screens: { SharedBasket: 'share/:id' } } }}
+      linking={{
+        prefixes: ['grocerycompare://'],
+        config: { screens: { SharedBasket: 'share/:id' } },
+      }}
       theme={{
         ...DefaultTheme,
         dark: Colors === DarkColors,
@@ -33,7 +36,10 @@ export default function AppNavigator() {
         },
       }}
     >
-      <StatusBar barStyle={Colors === DarkColors ? "light-content" : "dark-content"} backgroundColor={Colors.background} />
+      <StatusBar
+        barStyle={Colors === DarkColors ? 'light-content' : 'dark-content'}
+        backgroundColor={Colors.background}
+      />
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
@@ -43,8 +49,16 @@ export default function AppNavigator() {
           contentStyle: { backgroundColor: Colors.background },
         }}
       >
-        <Stack.Screen name="SharedBasket" component={SharedBasketScreen} options={{title:"Shared basket"}} />
-        <Stack.Screen name="SavedBaskets" component={SavedBasketsScreen} options={{title:"Saved baskets"}} />
+        <Stack.Screen
+          name="SharedBasket"
+          component={SharedBasketScreen}
+          options={{ title: 'Shared basket' }}
+        />
+        <Stack.Screen
+          name="SavedBaskets"
+          component={SavedBasketsScreen}
+          options={{ title: 'Saved baskets' }}
+        />
         <Stack.Screen
           name="Preferences"
           component={PreferencesScreen}

@@ -69,42 +69,43 @@ export default function PlatformPriceCard({
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  card: {
-    backgroundColor: Colors.card,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderLeftWidth: 6,
-  },
-  recommended: {
-    borderColor: Colors.primary,
-    borderWidth: 2,
-    backgroundColor: Colors.tint,
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  title: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
-  price: {
-    color: Colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
-    marginTop: 18,
-  },
-  badge: {
-    color: Colors.primary,
-    fontSize: 9,
-    letterSpacing: 0.5,
-    fontWeight: '800',
-  },
-  unavailable: { color: Colors.danger },
-  text: { color: Colors.textSecondary, marginTop: 10, lineHeight: 20 },
-  footnote: { color: Colors.textSecondary, fontSize: 11, marginTop: 8 },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: Colors.card,
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderLeftWidth: 6,
+    },
+    recommended: {
+      borderColor: Colors.primary,
+      borderWidth: 2,
+      backgroundColor: Colors.tint,
+    },
+    row: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    title: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
+    price: {
+      color: Colors.textPrimary,
+      fontSize: 28,
+      fontWeight: '800',
+      marginTop: 18,
+    },
+    badge: {
+      color: Colors.primary,
+      fontSize: 9,
+      letterSpacing: 0.5,
+      fontWeight: '800',
+    },
+    unavailable: { color: Colors.danger },
+    text: { color: Colors.textSecondary, marginTop: 10, lineHeight: 20 },
+    footnote: { color: Colors.textSecondary, fontSize: 11, marginTop: 8 },
+  });

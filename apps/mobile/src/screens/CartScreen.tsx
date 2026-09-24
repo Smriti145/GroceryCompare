@@ -26,16 +26,33 @@ export default function CartScreen({
   async function persistBasket(share: boolean) {
     setBusy(true);
     try {
-      const body = { pincode, items: cart.map(i => ({ productId: i.product.id, quantity: i.quantity })) };
+      const body = {
+        pincode,
+        items: cart.map(i => ({
+          productId: i.product.id,
+          quantity: i.quantity,
+        })),
+      };
       if (share) {
-        const { data } = await api.post<{url: string}>('/shares', body);
-        await Share.share({ message: `Compare my grocery basket (link expires in 7 days; GroceryCompare app required): ${data.url}` });
+        const { data } = await api.post<{ url: string }>('/shares', body);
+        await Share.share({
+          message: `Compare my grocery basket (link expires in 7 days; GroceryCompare app required): ${data.url}`,
+        });
       } else {
-        await api.post('/carts', { ...body, name: `Basket ${new Date().toLocaleDateString()}` });
-        Alert.alert('Basket saved', 'Available from Saved baskets on your account.');
+        await api.post('/carts', {
+          ...body,
+          name: `Basket ${new Date().toLocaleDateString()}`,
+        });
+        Alert.alert(
+          'Basket saved',
+          'Available from Saved baskets on your account.',
+        );
       }
-    } catch(error) { Alert.alert('Unable to save basket', errorMessage(error)); }
-    finally { setBusy(false); }
+    } catch (error) {
+      Alert.alert('Unable to save basket', errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
   }
   const { cart, setQuantity, removeFromCart, clearCart, hydrated } =
     useCartStore();
@@ -46,7 +63,8 @@ export default function CartScreen({
     >
       <Text style={styles.heading}>Your basket</Text>
       <Text style={styles.subtitle}>
-        {cart.reduce((sum, line) => sum + line.quantity, 0)} items · Compare serving retailers
+        {cart.reduce((sum, line) => sum + line.quantity, 0)} items · Compare
+        serving retailers
       </Text>
       <FlatList
         data={cart}
@@ -68,8 +86,36 @@ export default function CartScreen({
       />
       {cart.length > 0 ? (
         <>
-          <PrimaryButton title="Share basket" variant="secondary" disabled={busy || !/^[1-9][0-9]{5}$/.test(pincode)} onPress={() => Alert.alert('Share this basket?', 'Anyone with the link can see the items, quantities and delivery pincode for 7 days. Prices are refreshed when opened.', [{text:'Cancel', style:'cancel'}, {text:'Share', onPress:()=>{void persistBasket(true);}}])} />
-          <PrimaryButton title={tokens ? 'Save to account' : 'Sign in to save'} variant="secondary" disabled={busy} onPress={() => { if(tokens) {void persistBasket(false);} else navigation.navigate('Account'); }} />
+          <PrimaryButton
+            title="Share basket"
+            variant="secondary"
+            disabled={busy || !/^[1-9][0-9]{5}$/.test(pincode)}
+            onPress={() =>
+              Alert.alert(
+                'Share this basket?',
+                'Anyone with the link can see the items, quantities and delivery pincode for 7 days. Prices are refreshed when opened.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Share',
+                    onPress: () => {
+                      void persistBasket(true);
+                    },
+                  },
+                ],
+              )
+            }
+          />
+          <PrimaryButton
+            title={tokens ? 'Save to account' : 'Sign in to save'}
+            variant="secondary"
+            disabled={busy}
+            onPress={() => {
+              if (tokens) {
+                void persistBasket(false);
+              } else navigation.navigate('Account');
+            }}
+          />
           <PrimaryButton
             variant="secondary"
             title="Clear cart"
@@ -93,13 +139,14 @@ export default function CartScreen({
     </View>
   );
 }
-const themedStyles = (Colors: Palette) => StyleSheet.create({
-  heading: {
-    color: Colors.textPrimary,
-    fontSize: 30,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: { color: Colors.textSecondary, marginBottom: 24 },
-  container: { flex: 1, backgroundColor: Colors.background, padding: 16 },
-});
+const themedStyles = (Colors: Palette) =>
+  StyleSheet.create({
+    heading: {
+      color: Colors.textPrimary,
+      fontSize: 30,
+      fontWeight: '800',
+      marginBottom: 8,
+    },
+    subtitle: { color: Colors.textSecondary, marginBottom: 24 },
+    container: { flex: 1, backgroundColor: Colors.background, padding: 16 },
+  });

@@ -10,9 +10,20 @@ async function main() {
       z.enum(['USER', 'ADMIN']),
     ])
     .parse(process.argv.slice(2));
-  const result = await prisma.account.update({
-    where: { email },
-    data: { role },
+  const result = await prisma.$transaction(async tx => {
+    const account = await tx.account.update({
+      where: { email },
+      data: { role },
+    });
+    await tx.auditLog.create({
+      data: {
+        action: 'ACCOUNT_ROLE_CHANGED',
+        objectType: 'Account',
+        objectId: account.id,
+        reason: `Operator CLI set role to ${role}`,
+      },
+    });
+    return account;
   });
   console.info(
     JSON.stringify({

@@ -24,7 +24,8 @@ import { ApiError, errorHandler } from './middleware/errors';
 const requestIdPattern = /^[A-Za-z0-9_-]{8,64}$/;
 export function createApp(options: { emailSender?: EmailSender } = {}) {
   const app = express();
-  if (env.NODE_ENV === 'production' && !redis) throw new Error('REDIS_URL required in production');
+  if (env.NODE_ENV === 'production' && !redis)
+    throw new Error('REDIS_URL required in production');
   app.disable('x-powered-by');
   app.set('trust proxy', env.TRUST_PROXY_HOPS);
   app.use((_req, res, next) => {
@@ -38,8 +39,15 @@ export function createApp(options: { emailSender?: EmailSender } = {}) {
     res.setHeader('Cache-Control', 'no-store');
     res.on('finish', () => {
       const route = reqRoute(_req.baseUrl, _req.route?.path);
-      requests.inc({ method: _req.method, route, status: String(res.statusCode) });
-      latency.observe({ method: _req.method, route }, (performance.now() - start) / 1000);
+      requests.inc({
+        method: _req.method,
+        route,
+        status: String(res.statusCode),
+      });
+      latency.observe(
+        { method: _req.method, route },
+        (performance.now() - start) / 1000,
+      );
       console.info(
         JSON.stringify({
           level: 'info',
@@ -59,18 +67,30 @@ export function createApp(options: { emailSender?: EmailSender } = {}) {
     .map(value => value.trim())
     .filter(Boolean);
   app.use(
-    cors({
-      origin(origin, callback) {
-        if (!origin || origins.includes(origin)) callback(null, true);
-        else
-          callback(
-            new ApiError(403, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed'),
-          );
-      },
+    cors<express.Request>((req, callback) => {
+      const origin = req.header('origin');
+      if (
+        !origin ||
+        origin === `${req.protocol}://${req.get('host')}` ||
+        origins.includes(origin)
+      )
+        callback(null, { origin: true });
+      else
+        callback(
+          new ApiError(403, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed'),
+        );
     }),
   );
   app.get('/metrics', metricsEndpoint);
-  app.use((req, _res, next) => { if (env.NODE_ENV === 'production' && !req.secure && !req.path.startsWith('/health/')) return next(new ApiError(426, 'HTTPS_REQUIRED', 'HTTPS is required')); next(); });
+  app.use((req, _res, next) => {
+    if (
+      env.NODE_ENV === 'production' &&
+      !req.secure &&
+      !req.path.startsWith('/health/')
+    )
+      return next(new ApiError(426, 'HTTPS_REQUIRED', 'HTTPS is required'));
+    next();
+  });
   app.get('/health/live', (_req, res) => res.json({ status: 'ok' }));
   app.get('/health/ready', async (_req, res) => {
     try {
@@ -109,7 +129,10 @@ export function createApp(options: { emailSender?: EmailSender } = {}) {
   app.use('/api/shares', shareRoutes);
   app.use('/api/reports', reportRoutes);
   app.use('/api/admin', adminRoutes);
-  app.use('/admin', express.static(path.resolve(process.cwd(), '../admin/public')));
+  app.use(
+    '/admin',
+    express.static(path.resolve(process.cwd(), '../admin/public')),
+  );
   app.use('/api/account', accountRoutes(options.emailSender));
   app.use('/api/history', historyRoutes);
   app.use('/api/alerts', alertsRoutes);
@@ -122,4 +145,6 @@ export function createApp(options: { emailSender?: EmailSender } = {}) {
   return app;
 }
 
-function reqRoute(base: string, route: unknown): string { return typeof route === 'string' ? base + route : 'unmatched'; }
+function reqRoute(base: string, route: unknown): string {
+  return typeof route === 'string' ? base + route : 'unmatched';
+}

@@ -1,6 +1,6 @@
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../navigation/types';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import React, { useState } from 'react';
 import { ScrollView, Text, TextInput, View, Share, Alert } from 'react-native';
 import { defaultPreferences } from '../../../../packages/contracts/preferences';
@@ -34,7 +34,8 @@ interface Watch {
 }
 export default function AccountScreen() {
   const s = useFeatureStyles();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const tokens = useSessionStore(v => v.tokens),
     setTokens = useSessionStore(v => v.setTokens);
   const preferences = usePreferenceStore(v => v.preferences),
@@ -97,7 +98,13 @@ export default function AccountScreen() {
   }
   return (
     <ScrollView style={s.page} contentContainerStyle={s.content}>
-      {tokens ? <PrimaryButton title="Saved baskets" variant="secondary" onPress={()=>navigation.navigate('SavedBaskets')} /> : null}
+      {tokens ? (
+        <PrimaryButton
+          title="Saved baskets"
+          variant="secondary"
+          onPress={() => navigation.navigate('SavedBaskets')}
+        />
+      ) : null}
       <Text style={s.title}>Your account</Text>
       {!tokens ? (
         <>

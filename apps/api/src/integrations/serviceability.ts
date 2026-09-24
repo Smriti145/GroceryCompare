@@ -52,7 +52,22 @@ export async function importServiceability(payload: unknown) {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(1847292)`;
       let imported = 0;
       for (const r of rows) {
-        await tx.retailerStore.upsert({ where: { retailer_storeId_sellerId: { retailer: r.retailer, storeId: r.storeId, sellerId: r.sellerId } }, create: { retailer: r.retailer, storeId: r.storeId, sellerId: r.sellerId, warehouseId: r.warehouseId }, update: { warehouseId: r.warehouseId } });
+        await tx.retailerStore.upsert({
+          where: {
+            retailer_storeId_sellerId: {
+              retailer: r.retailer,
+              storeId: r.storeId,
+              sellerId: r.sellerId,
+            },
+          },
+          create: {
+            retailer: r.retailer,
+            storeId: r.storeId,
+            sellerId: r.sellerId,
+            warehouseId: r.warehouseId,
+          },
+          update: { warehouseId: r.warehouseId },
+        });
         const where = {
           retailer_storeId_sellerId_pincode: {
             retailer: r.retailer,
@@ -70,7 +85,20 @@ export async function importServiceability(payload: unknown) {
           tariff: r.tariff ?? Prisma.DbNull,
         };
         await tx.serviceArea.upsert({ where, create: data, update: data });
-        await tx.deliveryEstimate.createMany({ data: [{ retailer: r.retailer, storeId: r.storeId, sellerId: r.sellerId, pincode: r.pincode, etaMinutes: r.etaMinutes, observedAt: data.observedAt, expiresAt: data.expiresAt }], skipDuplicates: true });
+        await tx.deliveryEstimate.createMany({
+          data: [
+            {
+              retailer: r.retailer,
+              storeId: r.storeId,
+              sellerId: r.sellerId,
+              pincode: r.pincode,
+              etaMinutes: r.etaMinutes,
+              observedAt: data.observedAt,
+              expiresAt: data.expiresAt,
+            },
+          ],
+          skipDuplicates: true,
+        });
         imported++;
       }
       return { imported, skipped: rows.length - imported };
